@@ -6,6 +6,11 @@ package com.barmaster;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
+import net.runelite.api.Actor;
+import net.runelite.api.Client;
+import net.runelite.api.Player;
+import net.runelite.api.Renderable;
+import net.runelite.client.callback.Hooks;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -32,6 +37,12 @@ public class BarMasterPlugin extends Plugin
 {
 	@Inject
 	private OverlayManager overlayManager;
+
+	@Inject
+	private Client client;
+
+	@Inject
+	private Hooks hooks;
 
 	@Inject
 	private BarMasterConfig config;
@@ -63,11 +74,14 @@ public class BarMasterPlugin extends Plugin
 	@Inject
 	private EventBus eventBus;
 
+	private final Hooks.RenderableDrawListener drawListener = this::shouldDrawNativeRenderable;
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		log.debug("BarMaster started!");
 		migrateLegacyConfig();
+		hooks.registerRenderableDrawListener(drawListener);
 		eventBus.register(targetStatusOverlay);
 		eventBus.register(overheadStatusOverlay);
 		addOverlays();
@@ -79,6 +93,7 @@ public class BarMasterPlugin extends Plugin
 		removeOverlays();
 		eventBus.unregister(targetStatusOverlay);
 		eventBus.unregister(overheadStatusOverlay);
+		hooks.unregisterRenderableDrawListener(drawListener);
 		log.debug("BarMaster stopped!");
 	}
 
@@ -129,6 +144,34 @@ public class BarMasterPlugin extends Plugin
 		overlayManager.remove(playerPrayerBarOverlay);
 		overlayManager.remove(playerSpecialBarOverlay);
 		overlayManager.remove(playerRunEnergyBarOverlay);
+	}
+
+	private boolean shouldDrawNativeRenderable(Renderable renderable, boolean drawingUI)
+	{
+		if (!drawingUI || !config.hideGameCombatBars())
+		{
+			return true;
+		}
+
+		Player localPlayer = client.getLocalPlayer();
+		if (localPlayer == null)
+		{
+			return true;
+		}
+
+		if (renderable == localPlayer)
+		{
+			return false;
+		}
+
+		if (!(renderable instanceof Actor))
+		{
+			return true;
+		}
+
+		Actor actor = (Actor) renderable;
+		Actor localInteracting = localPlayer.getInteracting();
+		return actor != localInteracting && actor.getInteracting() != localPlayer;
 	}
 
 	@Provides

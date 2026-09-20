@@ -153,6 +153,18 @@ public interface BarMasterConfig extends Config
 		return 20;
 	}
 
+	@ConfigItem(
+		keyName = "hideGameCombatBars",
+		name = "Hide game combat bars",
+		description = "Hide native in-game 2D combat bars for yourself and your current opponent. This can also hide overhead 2D elements like prayers or chat for those actors.",
+		position = 7,
+		section = layoutSection
+	)
+	default boolean hideGameCombatBars()
+	{
+		return false;
+	}
+
 	@Range(min = 20, max = 400)
 	@ConfigItem(
 		keyName = "barWidth",
