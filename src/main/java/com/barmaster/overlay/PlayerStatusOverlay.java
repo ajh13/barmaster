@@ -5,6 +5,7 @@
 package com.barmaster.overlay;
 
 import com.barmaster.BarMasterConfig;
+import com.barmaster.BarOrientation;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
@@ -48,9 +49,10 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			return null;
 		}
 
+		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
 		int x = 0;
 		int y = 0;
-		Dimension total = new Dimension(config.barWidth(), 0);
+		Dimension total = vertical ? new Dimension(0, 0) : new Dimension(config.barWidth(), 0);
 
 		if (config.showPlayerHp())
 		{
@@ -59,8 +61,17 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			if (!shouldHideFullBar(current, max))
 			{
 				Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor());
-				y += size.height;
-				total.height += size.height;
+				if (vertical)
+				{
+					x += size.width + 2;
+					total.width += size.width + 2;
+					total.height = Math.max(total.height, size.height);
+				}
+				else
+				{
+					y += size.height;
+					total.height += size.height;
+				}
 			}
 		}
 
@@ -71,8 +82,17 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			if (!shouldHideFullBar(current, max))
 			{
 				Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor());
-				y += size.height;
-				total.height += size.height;
+				if (vertical)
+				{
+					x += size.width + 2;
+					total.width += size.width + 2;
+					total.height = Math.max(total.height, size.height);
+				}
+				else
+				{
+					y += size.height;
+					total.height += size.height;
+				}
 			}
 		}
 
@@ -84,8 +104,17 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			if (!shouldHideFullBar(current, max))
 			{
 				Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor());
-				y += size.height;
-				total.height += size.height;
+				if (vertical)
+				{
+					x += size.width + 2;
+					total.width += size.width + 2;
+					total.height = Math.max(total.height, size.height);
+				}
+				else
+				{
+					y += size.height;
+					total.height += size.height;
+				}
 			}
 		}
 
@@ -96,12 +125,26 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			if (!shouldHideFullBar(current, max))
 			{
 				Dimension size = renderBar(graphics, x, y, "Run", current, max, config.runEnergyColor());
-				y += size.height;
-				total.height += size.height;
+				if (vertical)
+				{
+					x += size.width + 2;
+					total.width += size.width + 2;
+					total.height = Math.max(total.height, size.height);
+				}
+				else
+				{
+					y += size.height;
+					total.height += size.height;
+				}
 			}
 		}
 
-		return total.height == 0 ? null : total;
+		if (vertical && total.width > 0)
+		{
+			total.width -= 2;
+		}
+
+		return total.width == 0 || total.height == 0 ? null : total;
 	}
 
 	private boolean shouldHideFullBar(int current, int max)

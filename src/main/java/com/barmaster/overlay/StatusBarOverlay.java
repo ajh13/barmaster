@@ -5,6 +5,7 @@
 package com.barmaster.overlay;
 
 import com.barmaster.BarMasterConfig;
+import com.barmaster.BarOrientation;
 import com.barmaster.BarTextMode;
 import com.barmaster.util.BarRenderer;
 import java.awt.BasicStroke;
@@ -14,7 +15,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Rectangle;
 import java.awt.geom.RoundRectangle2D;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -41,8 +41,11 @@ abstract class StatusBarOverlay extends Overlay
 	protected Dimension renderBar(Graphics2D graphics, int x, int y, String name, int current, int max, Color fillColor,
 								  int widthOverride, int heightOverride)
 	{
-		int width = resolveWidth(widthOverride);
-		int height = resolveHeight(heightOverride);
+		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
+		int configuredWidth = resolveWidth(widthOverride);
+		int configuredHeight = resolveHeight(heightOverride);
+		int width = vertical ? configuredHeight : configuredWidth;
+		int height = vertical ? configuredWidth : configuredHeight;
 		int border = Math.max(0, config.borderThickness());
 		int inset = Math.min(border, Math.min(width, height) / 2);
 		Color background = config.backgroundColor();
@@ -61,22 +64,32 @@ abstract class StatusBarOverlay extends Overlay
 		String valueLabel = BarRenderer.formatLabel(current, max, config.barTextMode());
 		String label = config.showBarNames() && !name.isEmpty() ? name + " " + valueLabel : valueLabel;
 
-		Rectangle backgroundRect = new Rectangle(x, y, width, height);
 		RoundRectangle2D.Float outer = new RoundRectangle2D.Float(x, y, width, height, arc, arc);
 		graphics.setColor(background);
 		graphics.fill(outer);
 
-		int fill = BarRenderer.fillWidth(width - 2 * inset, current, max);
+		int fill = vertical
+			? BarRenderer.fillWidth(height - 2 * inset, current, max)
+			: BarRenderer.fillWidth(width - 2 * inset, current, max);
 		if (fill > 0)
 		{
-			RoundRectangle2D.Float fillRect = new RoundRectangle2D.Float(
-				x + inset,
-				y + inset,
-				fill,
-				height - 2 * inset,
-				Math.max(0, arc - inset),
-				Math.max(0, arc - inset)
-			);
+			RoundRectangle2D.Float fillRect = vertical
+				? new RoundRectangle2D.Float(
+					x + inset,
+					y + height - inset - fill,
+					width - 2 * inset,
+					fill,
+					Math.max(0, arc - inset),
+					Math.max(0, arc - inset)
+				)
+				: new RoundRectangle2D.Float(
+					x + inset,
+					y + inset,
+					fill,
+					height - 2 * inset,
+					Math.max(0, arc - inset),
+					Math.max(0, arc - inset)
+				);
 			graphics.setColor(fillColor);
 			graphics.fill(fillRect);
 		}

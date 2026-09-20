@@ -90,6 +90,44 @@ public interface BarMasterConfig extends Config
 		return BarPlacementMode.FIXED;
 	}
 
+	@ConfigItem(
+		keyName = "barOrientation",
+		name = "Bar orientation",
+		description = "Render bars horizontally or vertically",
+		position = 2,
+		section = layoutSection
+	)
+	default BarOrientation barOrientation()
+	{
+		return BarOrientation.HORIZONTAL;
+	}
+
+	@Range(min = -300, max = 300)
+	@ConfigItem(
+		keyName = "overheadPlayerOffsetX",
+		name = "Overhead player X offset",
+		description = "Move the player overhead bar stack left or right in pixels",
+		position = 3,
+		section = layoutSection
+	)
+	default int overheadPlayerOffsetX()
+	{
+		return 0;
+	}
+
+	@Range(min = -300, max = 300)
+	@ConfigItem(
+		keyName = "overheadPlayerOffsetY",
+		name = "Overhead player Y offset",
+		description = "Move the player overhead bar stack up or down in pixels; negative moves up",
+		position = 4,
+		section = layoutSection
+	)
+	default int overheadPlayerOffsetY()
+	{
+		return 0;
+	}
+
 	@Range(min = 20, max = 400)
 	@ConfigItem(
 		keyName = "barWidth",

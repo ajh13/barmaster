@@ -5,6 +5,7 @@
 package com.barmaster.overlay;
 
 import com.barmaster.BarMasterConfig;
+import com.barmaster.BarOrientation;
 import com.barmaster.TargetDisplayStyle;
 import com.barmaster.TargetSourceMode;
 import com.barmaster.util.TargetHpEstimator;
@@ -126,8 +127,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		int width = resolveWidth(0);
-		int height = resolveHeight(0);
+		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
+		int width = vertical ? resolveHeight(0) : resolveWidth(0);
+		int height = vertical ? resolveWidth(0) : resolveHeight(0);
 		Point anchor = player.getCanvasTextLocation(graphics, "", player.getLogicalHeight() + ACTOR_TEXT_OFFSET);
 		if (anchor == null)
 		{
@@ -140,8 +142,13 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		int x = anchor.getX() - width / 2;
-		int y = anchor.getY() - visibleBars * (height + 2);
+		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * 2;
+		int x = vertical
+			? anchor.getX() + config.overheadPlayerOffsetX() - stackWidth / 2
+			: anchor.getX() + config.overheadPlayerOffsetX() - width / 2;
+		int y = vertical
+			? anchor.getY() + config.overheadPlayerOffsetY() - height
+			: anchor.getY() + config.overheadPlayerOffsetY() - visibleBars * (height + 2);
 
 		if (config.showPlayerHp())
 		{
@@ -149,7 +156,15 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = client.getRealSkillLevel(Skill.HITPOINTS);
 			if (!shouldHideFullBar(current, max))
 			{
-				y += renderBar(graphics, x, y, "HP", current, max, config.hpColor()).height;
+				Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor());
+				if (vertical)
+				{
+					x += size.width + 2;
+				}
+				else
+				{
+					y += size.height;
+				}
 			}
 		}
 		if (config.showPlayerPrayer())
@@ -158,7 +173,15 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = client.getRealSkillLevel(Skill.PRAYER);
 			if (!shouldHideFullBar(current, max))
 			{
-				y += renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor()).height;
+				Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor());
+				if (vertical)
+				{
+					x += size.width + 2;
+				}
+				else
+				{
+					y += size.height;
+				}
 			}
 		}
 		if (config.showSpecialAttack())
@@ -167,7 +190,15 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = 100;
 			if (!shouldHideFullBar(current, max))
 			{
-				y += renderBar(graphics, x, y, "Special", current, max, config.specialColor()).height;
+				Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor());
+				if (vertical)
+				{
+					x += size.width + 2;
+				}
+				else
+				{
+					y += size.height;
+				}
 			}
 		}
 		if (config.showRunEnergy())
@@ -176,7 +207,15 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = 100;
 			if (!shouldHideFullBar(current, max))
 			{
-				y += renderBar(graphics, x, y, "Run", current, max, config.runEnergyColor()).height;
+				Dimension size = renderBar(graphics, x, y, "Run", current, max, config.runEnergyColor());
+				if (vertical)
+				{
+					x += size.width + 2;
+				}
+				else
+				{
+					y += size.height;
+				}
 			}
 		}
 	}
@@ -217,8 +256,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		int width = resolveWidth(config.targetBarWidth());
-		int height = resolveHeight(config.targetBarHeight());
+		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
+		int width = vertical ? resolveHeight(config.targetBarHeight()) : resolveWidth(config.targetBarWidth());
+		int height = vertical ? resolveWidth(config.targetBarWidth()) : resolveHeight(config.targetBarHeight());
 		Point anchor = target.getCanvasTextLocation(graphics, "", target.getLogicalHeight() + ACTOR_TEXT_OFFSET);
 		if (anchor == null)
 		{
