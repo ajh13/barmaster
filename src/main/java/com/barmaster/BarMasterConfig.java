@@ -54,7 +54,7 @@ public interface BarMasterConfig extends Config
 
 	@ConfigSection(
 		name = "Target Hitpoints",
-		description = "Target HP bar options",
+		description = "Target and nearby overhead HP bar options",
 		position = 5
 	)
 	String targetSection = "target";
@@ -87,7 +87,7 @@ public interface BarMasterConfig extends Config
 	)
 	default BarPlacementMode placementMode()
 	{
-		return BarPlacementMode.FIXED;
+		return BarPlacementMode.OVERHEAD;
 	}
 
 	@ConfigItem(
@@ -137,7 +137,7 @@ public interface BarMasterConfig extends Config
 	)
 	default OverheadSizingMode overheadSizingMode()
 	{
-		return OverheadSizingMode.CONSTANT_SCREEN_SIZE;
+		return OverheadSizingMode.SCALE_WITH_CHARACTER;
 	}
 
 	@Range(min = 0, max = 120)
@@ -150,7 +150,7 @@ public interface BarMasterConfig extends Config
 	)
 	default int overheadGap()
 	{
-		return 20;
+		return 0;
 	}
 
 	@ConfigItem(
@@ -162,7 +162,7 @@ public interface BarMasterConfig extends Config
 	)
 	default boolean hideGameCombatBars()
 	{
-		return false;
+		return true;
 	}
 
 	@Range(min = 20, max = 400)
@@ -294,8 +294,8 @@ public interface BarMasterConfig extends Config
 	@Alpha
 	@ConfigItem(
 		keyName = "backgroundColor",
-		name = "Background color",
-		description = "Color of the empty portion of each bar",
+		name = "Bar background color",
+		description = "Color of each bar's background / empty portion",
 		position = 20,
 		section = styleSection
 	)
@@ -453,12 +453,36 @@ public interface BarMasterConfig extends Config
 		return TargetSourceMode.CURRENT_INTERACTION;
 	}
 
+	@ConfigItem(
+		keyName = "showNearbyNpcHealthBars",
+		name = "Show nearby NPC HP bars",
+		description = "Display overhead health bars for nearby NPCs with visible health",
+		position = 54,
+		section = targetSection
+	)
+	default boolean showNearbyNpcHealthBars()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showNearbyPlayerHealthBars",
+		name = "Show nearby player HP bars",
+		description = "Display overhead health bars for nearby players with visible health",
+		position = 55,
+		section = targetSection
+	)
+	default boolean showNearbyPlayerHealthBars()
+	{
+		return false;
+	}
+
 	@Range(min = 0, max = 400)
 	@ConfigItem(
 		keyName = "targetBarWidth",
 		name = "Target bar width",
 		description = "Override the width of the target HP bar (0 to use the global bar width)",
-		position = 54,
+		position = 56,
 		section = targetSection
 	)
 	default int targetBarWidth()
@@ -471,7 +495,7 @@ public interface BarMasterConfig extends Config
 		keyName = "targetBarHeight",
 		name = "Target bar height",
 		description = "Override the height of the target HP bar (0 to use the global bar height)",
-		position = 55,
+		position = 57,
 		section = targetSection
 	)
 	default int targetBarHeight()

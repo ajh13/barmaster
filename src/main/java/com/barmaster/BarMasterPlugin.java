@@ -5,11 +5,18 @@
 package com.barmaster;
 
 import com.google.inject.Provides;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
 import javax.inject.Inject;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
+import net.runelite.api.Hitsplat;
+import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.Renderable;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.callback.Hooks;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
@@ -75,6 +82,7 @@ public class BarMasterPlugin extends Plugin
 	private EventBus eventBus;
 
 	private final Hooks.RenderableDrawListener drawListener = this::shouldDrawNativeRenderable;
+	private final Map<Actor, Integer> activeHitsplats = new IdentityHashMap<>();
 
 	@Override
 	protected void startUp() throws Exception
@@ -91,6 +99,7 @@ public class BarMasterPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		removeOverlays();
+		activeHitsplats.clear();
 		eventBus.unregister(targetStatusOverlay);
 		eventBus.unregister(overheadStatusOverlay);
 		hooks.unregisterRenderableDrawListener(drawListener);
@@ -108,6 +117,31 @@ public class BarMasterPlugin extends Plugin
 		log.debug("BarMaster config changed: {}", event.getKey());
 		removeOverlays();
 		addOverlays();
+	}
+
+	@Subscribe
+	public void onHitsplatApplied(HitsplatApplied event)
+	{
+		Actor actor = event.getActor();
+		Hitsplat hitsplat = event.getHitsplat();
+		if (actor != null && hitsplat != null)
+		{
+			activeHitsplats.put(actor, hitsplat.getDisappearsOnGameCycle());
+		}
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		int gameCycle = client.getGameCycle();
+		Iterator<Map.Entry<Actor, Integer>> iterator = activeHitsplats.entrySet().iterator();
+		while (iterator.hasNext())
+		{
+			if (iterator.next().getValue() <= gameCycle)
+			{
+				iterator.remove();
+			}
+		}
 	}
 
 	private void addOverlays()
@@ -161,7 +195,7 @@ public class BarMasterPlugin extends Plugin
 
 		if (renderable == localPlayer)
 		{
-			return false;
+			return hasNativeOverheadUi(localPlayer);
 		}
 
 		if (!(renderable instanceof Actor))
@@ -170,8 +204,80 @@ public class BarMasterPlugin extends Plugin
 		}
 
 		Actor actor = (Actor) renderable;
+		if (hasVisibleHealth(actor) && shouldHideNativeHealthBarFor(actor, localPlayer))
+		{
+			return false;
+		}
+		if (hasNativeOverheadUi(actor))
+		{
+			return true;
+		}
+
 		Actor localInteracting = localPlayer.getInteracting();
 		return actor != localInteracting && actor.getInteracting() != localPlayer;
+	}
+
+	private boolean shouldHideNativeHealthBarFor(Actor actor, Player localPlayer)
+	{
+		if (hasNativeOverheadUi(actor))
+		{
+			return false;
+		}
+
+		if (actor instanceof NPC)
+		{
+			return config.showNearbyNpcHealthBars() || actor == localPlayer.getInteracting() || actor.getInteracting() == localPlayer;
+		}
+
+		return actor instanceof Player && config.showNearbyPlayerHealthBars();
+	}
+
+	private boolean hasVisibleHealth(Actor actor)
+	{
+		return actor.getHealthScale() > 0 && actor.getHealthRatio() >= 0;
+	}
+
+	private boolean hasNativeOverheadUi(Actor actor)
+	{
+		if (hasActiveHitsplat(actor))
+		{
+			return true;
+		}
+
+		if (actor.getOverheadText() != null)
+		{
+			return true;
+		}
+
+		if (actor instanceof Player)
+		{
+			Player player = (Player) actor;
+			return player.getOverheadIcon() != null || player.getSkullIcon() != -1;
+		}
+
+		if (actor instanceof NPC)
+		{
+			NPC npc = (NPC) actor;
+			return hasAnyOverheadSprite(npc.getOverheadArchiveIds()) || hasAnyOverheadSprite(npc.getOverheadSpriteIds());
+		}
+
+		return false;
+	}
+
+	private boolean hasAnyOverheadSprite(int[] overheadSprites)
+	{
+		return overheadSprites != null && overheadSprites.length > 0;
+	}
+
+	private boolean hasAnyOverheadSprite(short[] overheadSprites)
+	{
+		return overheadSprites != null && overheadSprites.length > 0;
+	}
+
+	private boolean hasActiveHitsplat(Actor actor)
+	{
+		Integer expiresOnCycle = activeHitsplats.get(actor);
+		return expiresOnCycle != null && expiresOnCycle > client.getGameCycle();
 	}
 
 	@Provides

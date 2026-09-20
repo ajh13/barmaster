@@ -10,6 +10,9 @@ import com.barmaster.OverheadSizingMode;
 import com.barmaster.TargetDisplayStyle;
 import com.barmaster.TargetSourceMode;
 import com.barmaster.util.TargetHpEstimator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
@@ -43,6 +46,8 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 
 	private NPC lastTarget;
 	private int ticksSinceLastTarget;
+	private List<NPC> nearbyNpcs = Collections.emptyList();
+	private List<Player> nearbyPlayers = Collections.emptyList();
 
 	@Inject
 	OverheadStatusOverlay(Client client, BarMasterConfig config, NPCManager npcManager)
@@ -62,8 +67,12 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		{
 			lastTarget = null;
 			ticksSinceLastTarget = 0;
+			nearbyNpcs = Collections.emptyList();
+			nearbyPlayers = Collections.emptyList();
 			return;
 		}
+
+		cacheNearbyHealthActors();
 
 		NPC target = resolveCurrentTarget();
 		if (target != null)
@@ -103,7 +112,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		renderPlayerBars(graphics, client.getLocalPlayer());
-		renderTargetBar(graphics, resolveTargetForRender());
+		NPC target = resolveTargetForRender();
+		renderNearbyHealthBars(graphics, target);
+		renderTargetBar(graphics, target);
 		return null;
 	}
 
@@ -265,27 +276,122 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
-		double scale = overheadScale(graphics, target);
-		int barWidth = overheadBarWidth(config.targetBarWidth(), scale);
-		int barHeight = overheadBarHeight(config.targetBarHeight(), scale);
-		int width = vertical ? barHeight : barWidth;
-		int height = vertical ? barWidth : barHeight;
-		Point anchor = target.getCanvasTextLocation(graphics, "", target.getLogicalHeight());
-		if (anchor == null)
-		{
-			return;
-		}
-
 		int maxHp = getNpcMaxHp(target);
 		TargetHpEstimator.Estimate estimate = TargetHpEstimator.estimate(healthRatio, healthScale, maxHp);
 		boolean showEstimated = config.targetDisplayStyle() == TargetDisplayStyle.ESTIMATED_HP;
 		int current = showEstimated && estimate.isRealHp() ? estimate.getCurrent() : healthRatio;
 		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : healthScale;
 		String name = target.getName() == null ? "Target" : Text.removeTags(target.getName());
+		renderActorHealthBar(graphics, target, name, current, max, config.targetHpColor());
+	}
+
+	private void renderNearbyHealthBars(Graphics2D graphics, NPC currentTarget)
+	{
+		if (config.showNearbyNpcHealthBars())
+		{
+			for (NPC npc : nearbyNpcs)
+			{
+				if (npc != currentTarget)
+				{
+					renderNearbyNpcHealthBar(graphics, npc);
+				}
+			}
+		}
+
+		if (config.showNearbyPlayerHealthBars())
+		{
+			Player localPlayer = client.getLocalPlayer();
+			for (Player player : nearbyPlayers)
+			{
+				if (player != localPlayer)
+				{
+					renderNearbyPlayerHealthBar(graphics, player);
+				}
+			}
+		}
+	}
+
+	private void cacheNearbyHealthActors()
+	{
+		if (config.showNearbyNpcHealthBars())
+		{
+			List<NPC> npcs = new ArrayList<>();
+			for (NPC npc : client.getNpcs())
+			{
+				if (npc != null && npc.getHealthScale() > 0 && npc.getHealthRatio() >= 0)
+				{
+					npcs.add(npc);
+				}
+			}
+			nearbyNpcs = npcs;
+		}
+		else
+		{
+			nearbyNpcs = Collections.emptyList();
+		}
+
+		if (config.showNearbyPlayerHealthBars())
+		{
+			List<Player> players = new ArrayList<>();
+			Player localPlayer = client.getLocalPlayer();
+			for (Player player : client.getPlayers())
+			{
+				if (player != null && player != localPlayer && player.getHealthScale() > 0 && player.getHealthRatio() >= 0)
+				{
+					players.add(player);
+				}
+			}
+			nearbyPlayers = players;
+		}
+		else
+		{
+			nearbyPlayers = Collections.emptyList();
+		}
+	}
+
+	private void renderNearbyNpcHealthBar(Graphics2D graphics, NPC npc)
+	{
+		if (npc == null || npc.getHealthScale() <= 0 || npc.getHealthRatio() < 0)
+		{
+			return;
+		}
+
+		int maxHp = getNpcMaxHp(npc);
+		TargetHpEstimator.Estimate estimate = TargetHpEstimator.estimate(npc.getHealthRatio(), npc.getHealthScale(), maxHp);
+		boolean showEstimated = config.targetDisplayStyle() == TargetDisplayStyle.ESTIMATED_HP;
+		int current = showEstimated && estimate.isRealHp() ? estimate.getCurrent() : npc.getHealthRatio();
+		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : npc.getHealthScale();
+		String name = npc.getName() == null ? "NPC" : Text.removeTags(npc.getName());
+		renderActorHealthBar(graphics, npc, name, current, max, config.targetHpColor());
+	}
+
+	private void renderNearbyPlayerHealthBar(Graphics2D graphics, Player player)
+	{
+		if (player == null || player.getHealthScale() <= 0 || player.getHealthRatio() < 0)
+		{
+			return;
+		}
+
+		String name = player.getName() == null ? "Player" : player.getName();
+		renderActorHealthBar(graphics, player, name, player.getHealthRatio(), player.getHealthScale(), config.hpColor());
+	}
+
+	private void renderActorHealthBar(Graphics2D graphics, Actor actor, String name, int current, int max, java.awt.Color color)
+	{
+		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
+		double scale = overheadScale(graphics, actor);
+		int barWidth = overheadBarWidth(config.targetBarWidth(), scale);
+		int barHeight = overheadBarHeight(config.targetBarHeight(), scale);
+		int width = vertical ? barHeight : barWidth;
+		int height = vertical ? barWidth : barHeight;
+		Point anchor = actor.getCanvasTextLocation(graphics, "", actor.getLogicalHeight());
+		if (anchor == null)
+		{
+			return;
+		}
 
 		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(scale), name, current, max,
-			config.targetHpColor(), barWidth, barHeight);
+			color, barWidth, barHeight);
 	}
 
 	private int overheadGap(double scale)
