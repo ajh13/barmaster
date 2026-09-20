@@ -23,7 +23,7 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 | Layout | Bar orientation | Horizontal or vertical bars |
 | Layout | Overhead player X/Y offset | Move your overhead stack left/right and up/down |
 | Layout | Overhead sizing | Keep overhead bars constant on-screen or scale them with the character |
-| Layout | Overhead gap | Pixel gap between the top of the character and the overhead bars |
+| Layout | Overhead gap | Gap between the top of the character and the overhead bars; scales with the character when that sizing mode is selected |
 | Style | Bar width / height | Size of each bar in pixels |
 | Style | Show text labels | Toggle value text |
 | Style | Text mode | Numbers, percent, or numbers and percent |

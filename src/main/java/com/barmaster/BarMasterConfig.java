@@ -144,7 +144,7 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "overheadGap",
 		name = "Overhead gap",
-		description = "Pixel gap between the top of the character and the overhead bar stack",
+		description = "Gap between the top of the character and the overhead bar stack; scales with the character in scale mode",
 		position = 6,
 		section = layoutSection
 	)

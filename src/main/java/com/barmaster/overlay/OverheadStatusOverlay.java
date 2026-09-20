@@ -137,8 +137,8 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		int barHeight = overheadBarHeight(0, scale);
 		int width = vertical ? barHeight : barWidth;
 		int height = vertical ? barWidth : barHeight;
-		int gap = OVERHEAD_BAR_GAP;
-		int overheadGap = config.overheadGap();
+		int gap = scaleOverheadDimension(OVERHEAD_BAR_GAP, scale);
+		int overheadGap = overheadGap(scale);
 		Point anchor = player.getCanvasTextLocation(graphics, "", player.getLogicalHeight());
 		if (anchor == null)
 		{
@@ -284,8 +284,13 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : healthScale;
 		String name = target.getName() == null ? "Target" : Text.removeTags(target.getName());
 
-		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - config.overheadGap(), name, current, max,
+		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(scale), name, current, max,
 			config.targetHpColor(), barWidth, barHeight);
+	}
+
+	private int overheadGap(double scale)
+	{
+		return scaleOverheadDimension(config.overheadGap(), scale);
 	}
 
 	private int overheadBarWidth(int widthOverride, double scale)
