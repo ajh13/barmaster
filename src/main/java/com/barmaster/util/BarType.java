@@ -28,8 +28,7 @@ public enum BarType
 {
 	HITPOINTS("HP"),
 	PRAYER("Prayer"),
-	SPECIAL_ATTACK("Special"),
-	TARGET_HITPOINTS("Target HP");
+	SPECIAL_ATTACK("Special");
 
 	private final String label;
 

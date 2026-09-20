@@ -24,7 +24,6 @@
  */
 package com.barmaster.util;
 
-import java.awt.Color;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -80,37 +79,4 @@ public class BarRendererTest
 		assertEquals("33 / 99", BarRenderer.formatLabel(33, 99, false));
 	}
 
-	@Test
-	public void testLerpColor()
-	{
-		Color black = new Color(0, 0, 0, 255);
-		Color white = new Color(255, 255, 255, 255);
-
-		Color mid = BarRenderer.lerpColor(black, white, 0.5);
-		assertEquals(128, mid.getRed());
-		assertEquals(128, mid.getGreen());
-		assertEquals(128, mid.getBlue());
-		assertEquals(255, mid.getAlpha());
-
-		Color start = BarRenderer.lerpColor(black, white, 0.0);
-		assertEquals(0, start.getRed());
-
-		Color end = BarRenderer.lerpColor(black, white, 1.0);
-		assertEquals(255, end.getRed());
-
-		Color clamped = BarRenderer.lerpColor(black, white, 2.0);
-		assertEquals(255, clamped.getRed());
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testLerpColorNullFrom()
-	{
-		BarRenderer.lerpColor(null, Color.BLACK, 0.5);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testLerpColorNullTo()
-	{
-		BarRenderer.lerpColor(Color.BLACK, null, 0.5);
-	}
 }

@@ -96,7 +96,7 @@ public interface BarMasterConfig extends Config
 		keyName = "barWidth",
 		name = "Bar width",
 		description = "Width of each status bar in pixels",
-		position = 1,
+		position = 10,
 		section = styleSection
 	)
 	default int barWidth()
@@ -109,7 +109,7 @@ public interface BarMasterConfig extends Config
 		keyName = "barHeight",
 		name = "Bar height",
 		description = "Height of each status bar in pixels",
-		position = 2,
+		position = 11,
 		section = styleSection
 	)
 	default int barHeight()
@@ -121,7 +121,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showText",
 		name = "Show text labels",
 		description = "Display current / maximum value text on bars",
-		position = 3,
+		position = 12,
 		section = styleSection
 	)
 	default boolean showText()
@@ -133,7 +133,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showPercentage",
 		name = "Show percentage",
 		description = "Append percentage to bar text labels",
-		position = 4,
+		position = 13,
 		section = styleSection
 	)
 	default boolean showPercentage()
@@ -146,7 +146,7 @@ public interface BarMasterConfig extends Config
 		keyName = "textColor",
 		name = "Text color",
 		description = "Color of the text drawn on bars",
-		position = 5,
+		position = 14,
 		section = styleSection
 	)
 	default Color textColor()
@@ -159,7 +159,7 @@ public interface BarMasterConfig extends Config
 		keyName = "backgroundColor",
 		name = "Background color",
 		description = "Color of the empty portion of each bar",
-		position = 6,
+		position = 15,
 		section = styleSection
 	)
 	default Color backgroundColor()
@@ -171,7 +171,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showPlayerHp",
 		name = "Show player HP bar",
 		description = "Display the player's hitpoints bar",
-		position = 0,
+		position = 20,
 		section = hpSection
 	)
 	default boolean showPlayerHp()
@@ -184,7 +184,7 @@ public interface BarMasterConfig extends Config
 		keyName = "hpColor",
 		name = "HP color",
 		description = "Fill color of the player HP bar",
-		position = 1,
+		position = 21,
 		section = hpSection
 	)
 	default Color hpColor()
@@ -196,7 +196,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showPlayerPrayer",
 		name = "Show player prayer bar",
 		description = "Display the player's prayer bar",
-		position = 0,
+		position = 30,
 		section = prayerSection
 	)
 	default boolean showPlayerPrayer()
@@ -209,7 +209,7 @@ public interface BarMasterConfig extends Config
 		keyName = "prayerColor",
 		name = "Prayer color",
 		description = "Fill color of the player prayer bar",
-		position = 1,
+		position = 31,
 		section = prayerSection
 	)
 	default Color prayerColor()
@@ -221,7 +221,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showSpecialAttack",
 		name = "Show special attack bar",
 		description = "Display the player's special attack energy bar",
-		position = 0,
+		position = 40,
 		section = specialSection
 	)
 	default boolean showSpecialAttack()
@@ -234,7 +234,7 @@ public interface BarMasterConfig extends Config
 		keyName = "specialColor",
 		name = "Special attack color",
 		description = "Fill color of the special attack bar",
-		position = 1,
+		position = 41,
 		section = specialSection
 	)
 	default Color specialColor()
@@ -246,7 +246,7 @@ public interface BarMasterConfig extends Config
 		keyName = "showTargetHp",
 		name = "Show target HP bar",
 		description = "Display the current target's HP bar when interacting with an entity",
-		position = 0,
+		position = 50,
 		section = targetSection
 	)
 	default boolean showTargetHp()
@@ -259,7 +259,7 @@ public interface BarMasterConfig extends Config
 		keyName = "targetHpColor",
 		name = "Target HP color",
 		description = "Fill color of the target HP bar",
-		position = 1,
+		position = 51,
 		section = targetSection
 	)
 	default Color targetHpColor()

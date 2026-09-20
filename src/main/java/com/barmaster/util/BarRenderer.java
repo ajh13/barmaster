@@ -24,8 +24,6 @@
  */
 package com.barmaster.util;
 
-import java.awt.Color;
-
 /**
  * Pure Java helper for computing status bar geometry, labels and colors.
  * Contains no RuneLite API references and is suitable for unit testing.
@@ -82,21 +80,4 @@ public final class BarRenderer
 		return builder.toString();
 	}
 
-	/**
-	 * Linearly interpolates between two colors. The ratio is clamped to [0.0, 1.0]
-	 * and the resulting alpha is taken from {@code from}.
-	 */
-	public static Color lerpColor(Color from, Color to, double ratio)
-	{
-		if (from == null || to == null)
-		{
-			throw new IllegalArgumentException("Colors must not be null");
-		}
-
-		double clamped = clamp((int) Math.round(ratio * 100.0), 0, 100) / 100.0;
-		int red = (int) Math.round(from.getRed() + (to.getRed() - from.getRed()) * clamped);
-		int green = (int) Math.round(from.getGreen() + (to.getGreen() - from.getGreen()) * clamped);
-		int blue = (int) Math.round(from.getBlue() + (to.getBlue() - from.getBlue()) * clamped);
-		return new Color(red, green, blue, from.getAlpha());
-	}
 }
