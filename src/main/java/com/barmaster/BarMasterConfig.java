@@ -301,7 +301,7 @@ public interface BarMasterConfig extends Config
 	)
 	default Color specialColor()
 	{
-		return new Color(225, 175, 40, 255);
+		return new Color(60, 210, 95, 255);
 	}
 
 	@ConfigItem(
@@ -326,7 +326,7 @@ public interface BarMasterConfig extends Config
 	)
 	default Color runEnergyColor()
 	{
-		return new Color(60, 210, 95, 255);
+		return new Color(235, 125, 35, 255);
 	}
 
 	@ConfigItem(

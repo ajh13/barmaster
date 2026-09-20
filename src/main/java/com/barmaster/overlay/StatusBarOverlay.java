@@ -5,6 +5,7 @@
 package com.barmaster.overlay;
 
 import com.barmaster.BarMasterConfig;
+import com.barmaster.BarTextMode;
 import com.barmaster.util.BarRenderer;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -55,7 +56,7 @@ abstract class StatusBarOverlay extends Overlay
 		Object originalTextAntialiasing = graphics.getRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING);
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(8, height - 2))));
+		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(6, height - 4))));
 
 		String valueLabel = BarRenderer.formatLabel(current, max, config.barTextMode());
 		String label = config.showBarNames() && !name.isEmpty() ? name + " " + valueLabel : valueLabel;
@@ -90,7 +91,7 @@ abstract class StatusBarOverlay extends Overlay
 		if (showText && !label.isEmpty())
 		{
 			FontMetrics metrics = graphics.getFontMetrics();
-			String fittedLabel = fitLabel(label, metrics, Math.max(0, width - 4));
+			String fittedLabel = fitBestLabel(label, valueLabel, current, max, metrics, Math.max(0, width - 4));
 			if (!fittedLabel.isEmpty())
 			{
 				int textX = x + (width - metrics.stringWidth(fittedLabel)) / 2;
@@ -119,23 +120,19 @@ abstract class StatusBarOverlay extends Overlay
 		return Math.max(1, heightOverride > 0 ? heightOverride : config.barHeight());
 	}
 
-	private static String fitLabel(String label, FontMetrics metrics, int maxWidth)
+	private static String fitBestLabel(String label, String valueLabel, int current, int max, FontMetrics metrics, int maxWidth)
 	{
 		if (maxWidth < 12)
 		{
 			return "";
 		}
 
-		if (metrics.stringWidth(label) <= maxWidth)
+		String percentLabel = BarRenderer.formatLabel(current, max, BarTextMode.PERCENT);
+		String currentLabel = Integer.toString(current);
+		String[] candidates = {label, valueLabel, percentLabel, currentLabel};
+		for (String candidate : candidates)
 		{
-			return label;
-		}
-
-		String ellipsis = "…";
-		for (int i = label.length() - 1; i > 0; i--)
-		{
-			String candidate = label.substring(0, i) + ellipsis;
-			if (metrics.stringWidth(candidate) <= maxWidth)
+			if (candidate != null && !candidate.isEmpty() && metrics.stringWidth(candidate) <= maxWidth)
 			{
 				return candidate;
 			}
