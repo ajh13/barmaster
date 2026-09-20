@@ -128,6 +128,31 @@ public interface BarMasterConfig extends Config
 		return 0;
 	}
 
+	@ConfigItem(
+		keyName = "overheadSizingMode",
+		name = "Overhead sizing",
+		description = "Keep overhead bars a constant screen size, or scale them with the character while zooming",
+		position = 5,
+		section = layoutSection
+	)
+	default OverheadSizingMode overheadSizingMode()
+	{
+		return OverheadSizingMode.CONSTANT_SCREEN_SIZE;
+	}
+
+	@Range(min = 0, max = 120)
+	@ConfigItem(
+		keyName = "overheadGap",
+		name = "Overhead gap",
+		description = "Pixel gap between the top of the character and the overhead bar stack",
+		position = 6,
+		section = layoutSection
+	)
+	default int overheadGap()
+	{
+		return 20;
+	}
+
 	@Range(min = 20, max = 400)
 	@ConfigItem(
 		keyName = "barWidth",
