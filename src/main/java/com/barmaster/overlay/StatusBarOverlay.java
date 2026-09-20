@@ -15,6 +15,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.RoundRectangle2D;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -59,7 +60,8 @@ abstract class StatusBarOverlay extends Overlay
 		Object originalTextAntialiasing = graphics.getRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING);
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(6, height - 4))));
+		int textThickness = vertical ? width : height;
+		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(6, textThickness - 4))));
 
 		String valueLabel = BarRenderer.formatLabel(current, max, config.barTextMode());
 		String label = config.showBarNames() && !name.isEmpty() ? name + " " + valueLabel : valueLabel;
@@ -101,18 +103,21 @@ abstract class StatusBarOverlay extends Overlay
 			graphics.draw(outer);
 		}
 
-		if (showText && !label.isEmpty())
+		if (showText && !label.isEmpty() && textThickness >= 12)
 		{
 			FontMetrics metrics = graphics.getFontMetrics();
-			String fittedLabel = fitBestLabel(label, valueLabel, current, max, metrics, Math.max(0, width - 4));
+			String fittedLabel = fitBestLabel(label, valueLabel, current, max, metrics,
+				Math.max(0, (vertical ? height : width) - 4));
 			if (!fittedLabel.isEmpty())
 			{
-				int textX = x + (width - metrics.stringWidth(fittedLabel)) / 2;
-				int textY = y + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
-				graphics.setColor(new Color(0, 0, 0, 150));
-				graphics.drawString(fittedLabel, textX + 1, textY + 1);
-				graphics.setColor(text);
-				graphics.drawString(fittedLabel, textX, textY);
+				if (vertical)
+				{
+					drawVerticalLabel(graphics, fittedLabel, x, y, width, height, metrics, text);
+				}
+				else
+				{
+					drawHorizontalLabel(graphics, fittedLabel, x, y, width, height, metrics, text);
+				}
 			}
 		}
 
@@ -152,5 +157,41 @@ abstract class StatusBarOverlay extends Overlay
 		}
 
 		return "";
+	}
+
+	private static void drawHorizontalLabel(Graphics2D graphics, String label, int x, int y, int width, int height,
+		FontMetrics metrics, Color text)
+	{
+		int textX = x + (width - metrics.stringWidth(label)) / 2;
+		int textY = y + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
+		drawLabelWithShadow(graphics, label, textX, textY, text);
+	}
+
+	private static void drawVerticalLabel(Graphics2D graphics, String label, int x, int y, int width, int height,
+		FontMetrics metrics, Color text)
+	{
+		AffineTransform originalTransform = graphics.getTransform();
+		try
+		{
+			int centerX = x + width / 2;
+			int centerY = y + height / 2;
+			graphics.translate(centerX, centerY);
+			graphics.rotate(-Math.PI / 2.0);
+			int textX = -metrics.stringWidth(label) / 2;
+			int textY = (metrics.getAscent() - metrics.getDescent()) / 2;
+			drawLabelWithShadow(graphics, label, textX, textY, text);
+		}
+		finally
+		{
+			graphics.setTransform(originalTransform);
+		}
+	}
+
+	private static void drawLabelWithShadow(Graphics2D graphics, String label, int textX, int textY, Color text)
+	{
+		graphics.setColor(new Color(0, 0, 0, 150));
+		graphics.drawString(label, textX + 1, textY + 1);
+		graphics.setColor(text);
+		graphics.drawString(label, textX, textY);
 	}
 }

@@ -33,6 +33,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 {
 	private static final int LAST_TARGET_TIMEOUT_TICKS = 8;
 	private static final int ACTOR_TEXT_OFFSET = 20;
+	private static final double DEFAULT_WORLD_SCALE = 512.0;
+	private static final double MIN_OVERHEAD_SCALE = 0.55;
+	private static final double MAX_OVERHEAD_SCALE = 1.8;
 
 	private final Client client;
 	private final NPCManager npcManager;
@@ -128,8 +131,11 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
-		int width = vertical ? resolveHeight(0) : resolveWidth(0);
-		int height = vertical ? resolveWidth(0) : resolveHeight(0);
+		int barWidth = overheadBarWidth(0);
+		int barHeight = overheadBarHeight(0);
+		int width = vertical ? barHeight : barWidth;
+		int height = vertical ? barWidth : barHeight;
+		int gap = overheadGap();
 		Point anchor = player.getCanvasTextLocation(graphics, "", player.getLogicalHeight() + ACTOR_TEXT_OFFSET);
 		if (anchor == null)
 		{
@@ -142,13 +148,13 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * 2;
+		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * gap;
 		int x = vertical
 			? anchor.getX() + config.overheadPlayerOffsetX() - stackWidth / 2
 			: anchor.getX() + config.overheadPlayerOffsetX() - width / 2;
 		int y = vertical
 			? anchor.getY() + config.overheadPlayerOffsetY() - height
-			: anchor.getY() + config.overheadPlayerOffsetY() - visibleBars * (height + 2);
+			: anchor.getY() + config.overheadPlayerOffsetY() - visibleBars * (height + gap);
 
 		if (config.showPlayerHp())
 		{
@@ -156,10 +162,10 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = client.getRealSkillLevel(Skill.HITPOINTS);
 			if (!shouldHideFullBar(current, max))
 			{
-				Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor());
+				Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor(), barWidth, barHeight);
 				if (vertical)
 				{
-					x += size.width + 2;
+					x += size.width + gap;
 				}
 				else
 				{
@@ -173,10 +179,10 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = client.getRealSkillLevel(Skill.PRAYER);
 			if (!shouldHideFullBar(current, max))
 			{
-				Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor());
+				Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor(), barWidth, barHeight);
 				if (vertical)
 				{
-					x += size.width + 2;
+					x += size.width + gap;
 				}
 				else
 				{
@@ -190,10 +196,10 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = 100;
 			if (!shouldHideFullBar(current, max))
 			{
-				Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor());
+				Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor(), barWidth, barHeight);
 				if (vertical)
 				{
-					x += size.width + 2;
+					x += size.width + gap;
 				}
 				else
 				{
@@ -207,10 +213,10 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			int max = 100;
 			if (!shouldHideFullBar(current, max))
 			{
-				Dimension size = renderBar(graphics, x, y, "Run", current, max, config.runEnergyColor());
+				Dimension size = renderBar(graphics, x, y, "Run", current, max, config.runEnergyColor(), barWidth, barHeight);
 				if (vertical)
 				{
-					x += size.width + 2;
+					x += size.width + gap;
 				}
 				else
 				{
@@ -257,8 +263,10 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
-		int width = vertical ? resolveHeight(config.targetBarHeight()) : resolveWidth(config.targetBarWidth());
-		int height = vertical ? resolveWidth(config.targetBarWidth()) : resolveHeight(config.targetBarHeight());
+		int barWidth = overheadBarWidth(config.targetBarWidth());
+		int barHeight = overheadBarHeight(config.targetBarHeight());
+		int width = vertical ? barHeight : barWidth;
+		int height = vertical ? barWidth : barHeight;
 		Point anchor = target.getCanvasTextLocation(graphics, "", target.getLogicalHeight() + ACTOR_TEXT_OFFSET);
 		if (anchor == null)
 		{
@@ -272,8 +280,42 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : healthScale;
 		String name = target.getName() == null ? "Target" : Text.removeTags(target.getName());
 
-		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - 2, name, current, max, config.targetHpColor(),
-			config.targetBarWidth(), config.targetBarHeight());
+		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(), name, current, max,
+			config.targetHpColor(), barWidth, barHeight);
+	}
+
+	private int overheadBarWidth(int widthOverride)
+	{
+		return scaleOverheadDimension(resolveWidth(widthOverride));
+	}
+
+	private int overheadBarHeight(int heightOverride)
+	{
+		return scaleOverheadDimension(resolveHeight(heightOverride));
+	}
+
+	private int overheadGap()
+	{
+		return scaleOverheadDimension(2);
+	}
+
+	private int scaleOverheadDimension(int dimension)
+	{
+		if (!config.scaleOverheadBarsWithZoom())
+		{
+			return dimension;
+		}
+		return Math.max(1, (int) Math.round(dimension * overheadScale()));
+	}
+
+	private double overheadScale()
+	{
+		return clamp(client.getScale() / DEFAULT_WORLD_SCALE, MIN_OVERHEAD_SCALE, MAX_OVERHEAD_SCALE);
+	}
+
+	private static double clamp(double value, double min, double max)
+	{
+		return Math.max(min, Math.min(max, value));
 	}
 
 	private int getNpcMaxHp(NPC npc)

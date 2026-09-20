@@ -128,6 +128,18 @@ public interface BarMasterConfig extends Config
 		return 0;
 	}
 
+	@ConfigItem(
+		keyName = "scaleOverheadBarsWithZoom",
+		name = "Scale overhead bars with zoom",
+		description = "Resize overhead bars with the game world's zoom so they stay closer to your character's apparent size",
+		position = 5,
+		section = layoutSection
+	)
+	default boolean scaleOverheadBarsWithZoom()
+	{
+		return false;
+	}
+
 	@Range(min = 20, max = 400)
 	@ConfigItem(
 		keyName = "barWidth",
