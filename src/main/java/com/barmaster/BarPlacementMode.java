@@ -9,12 +9,15 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum TargetSourceMode
+public enum BarPlacementMode
 {
-	CURRENT_INTERACTION("Current interaction only"),
-	LAST_INTERACTION("Remember last interaction");
+	FIXED("Fixed overlays only", true, false),
+	OVERHEAD("Above heads only", false, true),
+	BOTH("Fixed and above heads", true, true);
 
 	private final String name;
+	private final boolean fixedEnabled;
+	private final boolean overheadEnabled;
 
 	@Override
 	public String toString()

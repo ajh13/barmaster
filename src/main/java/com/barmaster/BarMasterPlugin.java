@@ -1,26 +1,6 @@
 /*
- * Copyright (c) 2026, BarMaster Contributors
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 BarMaster contributors
  */
 package com.barmaster;
 
@@ -34,8 +14,10 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import com.barmaster.overlay.OverheadStatusOverlay;
 import com.barmaster.overlay.PlayerHpBarOverlay;
 import com.barmaster.overlay.PlayerPrayerBarOverlay;
+import com.barmaster.overlay.PlayerRunEnergyBarOverlay;
 import com.barmaster.overlay.PlayerSpecialBarOverlay;
 import com.barmaster.overlay.PlayerStatusOverlay;
 import com.barmaster.overlay.TargetStatusOverlay;
@@ -55,6 +37,9 @@ public class BarMasterPlugin extends Plugin
 	private BarMasterConfig config;
 
 	@Inject
+	private ConfigManager configManager;
+
+	@Inject
 	private PlayerStatusOverlay playerStatusOverlay;
 
 	@Inject
@@ -67,7 +52,13 @@ public class BarMasterPlugin extends Plugin
 	private PlayerSpecialBarOverlay playerSpecialBarOverlay;
 
 	@Inject
+	private PlayerRunEnergyBarOverlay playerRunEnergyBarOverlay;
+
+	@Inject
 	private TargetStatusOverlay targetStatusOverlay;
+
+	@Inject
+	private OverheadStatusOverlay overheadStatusOverlay;
 
 	@Inject
 	private EventBus eventBus;
@@ -76,7 +67,9 @@ public class BarMasterPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		log.debug("BarMaster started!");
+		migrateLegacyConfig();
 		eventBus.register(targetStatusOverlay);
+		eventBus.register(overheadStatusOverlay);
 		addOverlays();
 	}
 
@@ -85,6 +78,7 @@ public class BarMasterPlugin extends Plugin
 	{
 		removeOverlays();
 		eventBus.unregister(targetStatusOverlay);
+		eventBus.unregister(overheadStatusOverlay);
 		log.debug("BarMaster stopped!");
 	}
 
@@ -97,29 +91,61 @@ public class BarMasterPlugin extends Plugin
 		}
 
 		log.debug("BarMaster config changed: {}", event.getKey());
+		removeOverlays();
+		addOverlays();
 	}
 
 	private void addOverlays()
 	{
-		overlayManager.add(playerStatusOverlay);
-		overlayManager.add(targetStatusOverlay);
-		overlayManager.add(playerHpBarOverlay);
-		overlayManager.add(playerPrayerBarOverlay);
-		overlayManager.add(playerSpecialBarOverlay);
+		if (config.placementMode().isFixedEnabled())
+		{
+			if (config.groupPlayerBars())
+			{
+				overlayManager.add(playerStatusOverlay);
+			}
+			else
+			{
+				overlayManager.add(playerHpBarOverlay);
+				overlayManager.add(playerPrayerBarOverlay);
+				overlayManager.add(playerSpecialBarOverlay);
+				overlayManager.add(playerRunEnergyBarOverlay);
+			}
+
+			overlayManager.add(targetStatusOverlay);
+		}
+
+		if (config.placementMode().isOverheadEnabled())
+		{
+			overlayManager.add(overheadStatusOverlay);
+		}
 	}
 
 	private void removeOverlays()
 	{
 		overlayManager.remove(playerStatusOverlay);
 		overlayManager.remove(targetStatusOverlay);
+		overlayManager.remove(overheadStatusOverlay);
 		overlayManager.remove(playerHpBarOverlay);
 		overlayManager.remove(playerPrayerBarOverlay);
 		overlayManager.remove(playerSpecialBarOverlay);
+		overlayManager.remove(playerRunEnergyBarOverlay);
 	}
 
 	@Provides
 	BarMasterConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(BarMasterConfig.class);
+	}
+
+	private void migrateLegacyConfig()
+	{
+		String legacyShowPercentage = configManager.getConfiguration(BarMasterConfig.CONFIG_GROUP, "showPercentage");
+		String textMode = configManager.getConfiguration(BarMasterConfig.CONFIG_GROUP, "barTextMode");
+		if (legacyShowPercentage != null && textMode == null)
+		{
+			configManager.setConfiguration(BarMasterConfig.CONFIG_GROUP, "barTextMode",
+				Boolean.parseBoolean(legacyShowPercentage) ? BarTextMode.BOTH : BarTextMode.NUMBERS);
+			configManager.unsetConfiguration(BarMasterConfig.CONFIG_GROUP, "showPercentage");
+		}
 	}
 }

@@ -1,26 +1,6 @@
 /*
- * Copyright (c) 2026, BarMaster Contributors
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 BarMaster contributors
  */
 package com.barmaster;
 
@@ -79,16 +59,35 @@ public interface BarMasterConfig extends Config
 	)
 	String targetSection = "target";
 
+	@ConfigSection(
+		name = "Run Energy",
+		description = "Run energy bar options",
+		position = 6
+	)
+	String runSection = "run";
+
 	@ConfigItem(
 		keyName = "groupPlayerBars",
 		name = "Group player bars",
-		description = "Show HP, prayer and special attack as a single grouped frame instead of independent overlays",
+		description = "Stack HP, prayer, special attack, and run energy as one movable overlay instead of independent overlays",
 		position = 0,
 		section = layoutSection
 	)
 	default boolean groupPlayerBars()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "placementMode",
+		name = "Bar placement",
+		description = "Show bars as fixed overlays, above character heads, or both",
+		position = 1,
+		section = layoutSection
+	)
+	default BarPlacementMode placementMode()
+	{
+		return BarPlacementMode.FIXED;
 	}
 
 	@Range(min = 20, max = 400)
@@ -130,13 +129,25 @@ public interface BarMasterConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "showPercentage",
-		name = "Show percentage",
-		description = "Append percentage to bar text labels",
+		keyName = "barTextMode",
+		name = "Text mode",
+		description = "Choose whether bar labels show numbers, percentages, or both",
 		position = 13,
 		section = styleSection
 	)
-	default boolean showPercentage()
+	default BarTextMode barTextMode()
+	{
+		return BarTextMode.NUMBERS;
+	}
+
+	@ConfigItem(
+		keyName = "showBarNames",
+		name = "Show bar names",
+		description = "Prefix labels with HP, Prayer, Special, or target names",
+		position = 14,
+		section = styleSection
+	)
+	default boolean showBarNames()
 	{
 		return false;
 	}
@@ -144,8 +155,8 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "hideFullPlayerBars",
 		name = "Hide full player bars",
-		description = "Do not show player HP, prayer or special attack bars when they are at maximum",
-		position = 14,
+		description = "Do not show player HP, prayer, special attack, or run energy bars when they are at maximum",
+		position = 15,
 		section = styleSection
 	)
 	default boolean hideFullPlayerBars()
@@ -157,8 +168,8 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "fontSize",
 		name = "Font size",
-		description = "Font size used for bar text labels",
-		position = 15,
+		description = "Font size used for bar text labels; labels auto-hide when bars are too skinny",
+		position = 16,
 		section = styleSection
 	)
 	default int fontSize()
@@ -171,7 +182,7 @@ public interface BarMasterConfig extends Config
 		keyName = "textColor",
 		name = "Text color",
 		description = "Color of the text drawn on bars",
-		position = 16,
+		position = 17,
 		section = styleSection
 	)
 	default Color textColor()
@@ -184,7 +195,7 @@ public interface BarMasterConfig extends Config
 		keyName = "borderColor",
 		name = "Border color",
 		description = "Color of the border drawn around each bar",
-		position = 17,
+		position = 18,
 		section = styleSection
 	)
 	default Color borderColor()
@@ -197,12 +208,12 @@ public interface BarMasterConfig extends Config
 		keyName = "borderThickness",
 		name = "Border thickness",
 		description = "Thickness of the border drawn around each bar in pixels",
-		position = 18,
+		position = 19,
 		section = styleSection
 	)
 	default int borderThickness()
 	{
-		return 1;
+		return 0;
 	}
 
 	@Alpha
@@ -210,12 +221,12 @@ public interface BarMasterConfig extends Config
 		keyName = "backgroundColor",
 		name = "Background color",
 		description = "Color of the empty portion of each bar",
-		position = 19,
+		position = 20,
 		section = styleSection
 	)
 	default Color backgroundColor()
 	{
-		return new Color(30, 30, 30, 200);
+		return new Color(18, 18, 18, 230);
 	}
 
 	@ConfigItem(
@@ -290,7 +301,32 @@ public interface BarMasterConfig extends Config
 	)
 	default Color specialColor()
 	{
-		return new Color(220, 200, 40, 255);
+		return new Color(225, 175, 40, 255);
+	}
+
+	@ConfigItem(
+		keyName = "showRunEnergy",
+		name = "Show run energy bar",
+		description = "Display the player's run energy bar",
+		position = 45,
+		section = runSection
+	)
+	default boolean showRunEnergy()
+	{
+		return true;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "runEnergyColor",
+		name = "Run energy color",
+		description = "Fill color of the run energy bar",
+		position = 46,
+		section = runSection
+	)
+	default Color runEnergyColor()
+	{
+		return new Color(60, 210, 95, 255);
 	}
 
 	@ConfigItem(

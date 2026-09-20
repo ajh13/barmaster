@@ -10,12 +10,12 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
-public class PlayerHpBarOverlay extends SingleBarOverlay
+public class PlayerRunEnergyBarOverlay extends SingleBarOverlay
 {
 	@Inject
-	PlayerHpBarOverlay(Client client, BarMasterConfig config)
+	PlayerRunEnergyBarOverlay(Client client, BarMasterConfig config)
 	{
-		super(client, config, BarType.HITPOINTS);
-		setPosition(OverlayPosition.TOP_LEFT);
+		super(client, config, BarType.RUN_ENERGY);
+		setPosition(OverlayPosition.BOTTOM_LEFT);
 	}
 }

@@ -9,10 +9,11 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum TargetSourceMode
+public enum BarTextMode
 {
-	CURRENT_INTERACTION("Current interaction only"),
-	LAST_INTERACTION("Remember last interaction");
+	NUMBERS("Numbers"),
+	PERCENT("Percent"),
+	BOTH("Numbers and percent");
 
 	private final String name;
 

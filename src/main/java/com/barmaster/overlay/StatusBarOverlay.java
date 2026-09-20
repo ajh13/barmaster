@@ -1,26 +1,6 @@
 /*
- * Copyright (c) 2026, BarMaster Contributors
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 BarMaster contributors
  */
 package com.barmaster.overlay;
 
@@ -32,7 +12,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Rectangle;
+import java.awt.geom.RoundRectangle2D;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
@@ -66,44 +48,63 @@ abstract class StatusBarOverlay extends Overlay
 		Color text = config.textColor();
 		Color borderColor = config.borderColor();
 		boolean showText = config.showText();
-		boolean showPercentage = config.showPercentage();
+		int arc = Math.min(8, Math.max(2, height / 3));
 
 		Font originalFont = graphics.getFont();
+		Object originalAntialiasing = graphics.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+		Object originalTextAntialiasing = graphics.getRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING);
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(8, height - 2))));
 
-		String label = showText ? name + " " + BarRenderer.formatLabel(current, max, showPercentage) : name;
+		String valueLabel = BarRenderer.formatLabel(current, max, config.barTextMode());
+		String label = config.showBarNames() && !name.isEmpty() ? name + " " + valueLabel : valueLabel;
 
 		Rectangle backgroundRect = new Rectangle(x, y, width, height);
+		RoundRectangle2D.Float outer = new RoundRectangle2D.Float(x, y, width, height, arc, arc);
 		graphics.setColor(background);
-		graphics.fill(backgroundRect);
+		graphics.fill(outer);
 
 		int fill = BarRenderer.fillWidth(width - 2 * inset, current, max);
 		if (fill > 0)
 		{
-			Rectangle fillRect = new Rectangle(
+			RoundRectangle2D.Float fillRect = new RoundRectangle2D.Float(
 				x + inset,
 				y + inset,
 				fill,
-				height - 2 * inset
+				height - 2 * inset,
+				Math.max(0, arc - inset),
+				Math.max(0, arc - inset)
 			);
 			graphics.setColor(fillColor);
 			graphics.fill(fillRect);
 		}
 
-		graphics.setColor(borderColor);
-		graphics.setStroke(new BasicStroke(border));
-		graphics.draw(backgroundRect);
+		if (border > 0)
+		{
+			graphics.setColor(borderColor);
+			graphics.setStroke(new BasicStroke(border));
+			graphics.draw(outer);
+		}
 
-		if (showText || !name.isEmpty())
+		if (showText && !label.isEmpty())
 		{
 			FontMetrics metrics = graphics.getFontMetrics();
-			int textX = x + (width - metrics.stringWidth(label)) / 2;
-			int textY = y + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
-			graphics.setColor(text);
-			graphics.drawString(label, textX, textY);
+			String fittedLabel = fitLabel(label, metrics, Math.max(0, width - 4));
+			if (!fittedLabel.isEmpty())
+			{
+				int textX = x + (width - metrics.stringWidth(fittedLabel)) / 2;
+				int textY = y + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
+				graphics.setColor(new Color(0, 0, 0, 150));
+				graphics.drawString(fittedLabel, textX + 1, textY + 1);
+				graphics.setColor(text);
+				graphics.drawString(fittedLabel, textX, textY);
+			}
 		}
 
 		graphics.setFont(originalFont);
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, originalAntialiasing);
+		graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, originalTextAntialiasing);
 
 		return new Dimension(width, height + PADDING);
 	}
@@ -116,5 +117,30 @@ abstract class StatusBarOverlay extends Overlay
 	protected int resolveHeight(int heightOverride)
 	{
 		return Math.max(1, heightOverride > 0 ? heightOverride : config.barHeight());
+	}
+
+	private static String fitLabel(String label, FontMetrics metrics, int maxWidth)
+	{
+		if (maxWidth < 12)
+		{
+			return "";
+		}
+
+		if (metrics.stringWidth(label) <= maxWidth)
+		{
+			return label;
+		}
+
+		String ellipsis = "…";
+		for (int i = label.length() - 1; i > 0; i--)
+		{
+			String candidate = label.substring(0, i) + ellipsis;
+			if (metrics.stringWidth(candidate) <= maxWidth)
+			{
+				return candidate;
+			}
+		}
+
+		return "";
 	}
 }
