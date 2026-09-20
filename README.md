@@ -6,9 +6,9 @@ BarMaster is a display-only RuneLite external plugin that adds configurable stat
 
 - **Player status bars**: HP, prayer, special attack energy, and run energy.
 - **Target HP bar**: Shows the current or last interacted target. NPCs use estimated real HP when RuneLite has max HP data, otherwise BarMaster falls back to ratio/scale.
-- **Fixed, overhead, or both**: Show bars as movable RuneLite overlays, above character heads, or both at once. Player overhead stacks can be offset horizontally/vertically and optionally scale with game zoom.
+- **Fixed, overhead, or both**: Show bars as movable RuneLite overlays, above character heads, or both at once. Player overhead stacks can be offset horizontally/vertically and optionally scale from the character's on-screen height.
 - **Grouped or independent layout**: Stack player bars into one movable overlay, or use independent overlays that can be positioned separately.
-- **Sleeker rendering**: Rounded borderless bars by default, horizontal or vertical orientation, vertical text on vertical bars, antialiased drawing, darker empty-bar background, and labels that auto-hide instead of becoming unreadable on skinny bars.
+- **Sleeker rendering**: Rounded borderless bars by default, horizontal or vertical orientation, stacked upright text on vertical bars, antialiased drawing, darker empty-bar background, and labels that auto-hide instead of becoming unreadable on skinny bars.
 - **Text modes**: Show just numbers, just percent, or both numbers and percent; optional bar names can be enabled separately.
 - **Pure Java helpers**: `BarRenderer` handles bar geometry/labels and `TargetHpEstimator` handles NPC HP estimation; both are covered by unit tests.
 
@@ -22,7 +22,7 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 | Layout | Bar placement | Fixed overlays, overhead character bars, or both |
 | Layout | Bar orientation | Horizontal or vertical bars |
 | Layout | Overhead player X/Y offset | Move your overhead stack left/right and up/down |
-| Layout | Scale overhead bars with zoom | Resize overhead bars with game zoom so they stay closer to the apparent character size |
+| Layout | Scale overhead bars with zoom | Resize overhead bars from the actor's on-screen height so they stay closer to the apparent character size |
 | Style | Bar width / height | Size of each bar in pixels |
 | Style | Show text labels | Toggle value text |
 | Style | Text mode | Numbers, percent, or numbers and percent |

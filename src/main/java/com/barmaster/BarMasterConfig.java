@@ -131,7 +131,7 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "scaleOverheadBarsWithZoom",
 		name = "Scale overhead bars with zoom",
-		description = "Resize overhead bars with the game world's zoom so they stay closer to your character's apparent size",
+		description = "Resize overhead bars from the actor's on-screen height so they stay closer to the character's apparent size",
 		position = 5,
 		section = layoutSection
 	)

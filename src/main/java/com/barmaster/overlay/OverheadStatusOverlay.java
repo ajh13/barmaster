@@ -33,9 +33,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 {
 	private static final int LAST_TARGET_TIMEOUT_TICKS = 8;
 	private static final int ACTOR_TEXT_OFFSET = 20;
-	private static final double DEFAULT_WORLD_SCALE = 512.0;
-	private static final double MIN_OVERHEAD_SCALE = 0.55;
-	private static final double MAX_OVERHEAD_SCALE = 1.8;
+	private static final double DEFAULT_ACTOR_PIXEL_HEIGHT = 75.0;
+	private static final double MIN_OVERHEAD_SCALE = 0.45;
+	private static final double MAX_OVERHEAD_SCALE = 2.25;
 
 	private final Client client;
 	private final NPCManager npcManager;
@@ -131,11 +131,12 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
-		int barWidth = overheadBarWidth(0);
-		int barHeight = overheadBarHeight(0);
+		double scale = overheadScale(graphics, player);
+		int barWidth = overheadBarWidth(0, scale);
+		int barHeight = overheadBarHeight(0, scale);
 		int width = vertical ? barHeight : barWidth;
 		int height = vertical ? barWidth : barHeight;
-		int gap = overheadGap();
+		int gap = overheadGap(scale);
 		Point anchor = player.getCanvasTextLocation(graphics, "", player.getLogicalHeight() + ACTOR_TEXT_OFFSET);
 		if (anchor == null)
 		{
@@ -263,8 +264,9 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		boolean vertical = config.barOrientation() == BarOrientation.VERTICAL;
-		int barWidth = overheadBarWidth(config.targetBarWidth());
-		int barHeight = overheadBarHeight(config.targetBarHeight());
+		double scale = overheadScale(graphics, target);
+		int barWidth = overheadBarWidth(config.targetBarWidth(), scale);
+		int barHeight = overheadBarHeight(config.targetBarHeight(), scale);
 		int width = vertical ? barHeight : barWidth;
 		int height = vertical ? barWidth : barHeight;
 		Point anchor = target.getCanvasTextLocation(graphics, "", target.getLogicalHeight() + ACTOR_TEXT_OFFSET);
@@ -280,37 +282,55 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : healthScale;
 		String name = target.getName() == null ? "Target" : Text.removeTags(target.getName());
 
-		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(), name, current, max,
+		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(scale), name, current, max,
 			config.targetHpColor(), barWidth, barHeight);
 	}
 
-	private int overheadBarWidth(int widthOverride)
+	private int overheadBarWidth(int widthOverride, double scale)
 	{
-		return scaleOverheadDimension(resolveWidth(widthOverride));
+		return scaleOverheadDimension(resolveWidth(widthOverride), scale);
 	}
 
-	private int overheadBarHeight(int heightOverride)
+	private int overheadBarHeight(int heightOverride, double scale)
 	{
-		return scaleOverheadDimension(resolveHeight(heightOverride));
+		return scaleOverheadDimension(resolveHeight(heightOverride), scale);
 	}
 
-	private int overheadGap()
+	private int overheadGap(double scale)
 	{
-		return scaleOverheadDimension(2);
+		return scaleOverheadDimension(2, scale);
 	}
 
-	private int scaleOverheadDimension(int dimension)
+	private int scaleOverheadDimension(int dimension, double scale)
 	{
 		if (!config.scaleOverheadBarsWithZoom())
 		{
 			return dimension;
 		}
-		return Math.max(1, (int) Math.round(dimension * overheadScale()));
+		return Math.max(1, (int) Math.round(dimension * scale));
 	}
 
-	private double overheadScale()
+	private double overheadScale(Graphics2D graphics, Actor actor)
 	{
-		return clamp(client.getScale() / DEFAULT_WORLD_SCALE, MIN_OVERHEAD_SCALE, MAX_OVERHEAD_SCALE);
+		if (!config.scaleOverheadBarsWithZoom())
+		{
+			return 1.0;
+		}
+
+		Point bottom = actor.getCanvasTextLocation(graphics, "", 0);
+		Point top = actor.getCanvasTextLocation(graphics, "", actor.getLogicalHeight());
+		if (bottom == null || top == null)
+		{
+			return 1.0;
+		}
+
+		int apparentHeight = Math.abs(bottom.getY() - top.getY());
+		if (apparentHeight <= 0)
+		{
+			return 1.0;
+		}
+
+		return clamp(apparentHeight / DEFAULT_ACTOR_PIXEL_HEIGHT, MIN_OVERHEAD_SCALE, MAX_OVERHEAD_SCALE);
 	}
 
 	private static double clamp(double value, double min, double max)
