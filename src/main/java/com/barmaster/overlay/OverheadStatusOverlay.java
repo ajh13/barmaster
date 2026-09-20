@@ -150,6 +150,7 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		int height = vertical ? barWidth : barHeight;
 		int gap = scaleOverheadDimension(OVERHEAD_BAR_GAP, scale);
 		int overheadGap = overheadGap(scale);
+		int sideGap = overheadSideGap(scale);
 		Point anchor = player.getCanvasTextLocation(graphics, "", player.getLogicalHeight());
 		if (anchor == null)
 		{
@@ -164,8 +165,8 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 
 		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * gap;
 		int x = vertical
-			? anchor.getX() + config.overheadPlayerOffsetX() - stackWidth / 2
-			: anchor.getX() + config.overheadPlayerOffsetX() - width / 2;
+			? anchor.getX() + config.overheadPlayerOffsetX() - sideGap - stackWidth
+			: anchor.getX() + config.overheadPlayerOffsetX() - sideGap - width;
 		int y = vertical
 			? anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - height
 			: anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - visibleBars * (height + gap);
@@ -390,13 +391,18 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		renderBar(graphics, anchor.getX() - width / 2, anchor.getY() - height - overheadGap(scale), name, current, max,
+		renderBar(graphics, anchor.getX() - width - overheadSideGap(scale), anchor.getY() - height - overheadGap(scale), name, current, max,
 			color, barWidth, barHeight);
 	}
 
 	private int overheadGap(double scale)
 	{
 		return scaleOverheadDimension(config.overheadGap(), scale);
+	}
+
+	private int overheadSideGap(double scale)
+	{
+		return scaleOverheadDimension(config.overheadSideGap(), scale);
 	}
 
 	private int overheadBarWidth(int widthOverride, double scale)

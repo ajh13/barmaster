@@ -153,11 +153,24 @@ public interface BarMasterConfig extends Config
 		return 0;
 	}
 
+	@Range(min = 0, max = 200)
+	@ConfigItem(
+		keyName = "overheadSideGap",
+		name = "Native overhead clearance",
+		description = "Horizontal clearance from the actor's native overhead UI anchor; BarMaster bars sit to the left so native overheads appear to the right",
+		position = 7,
+		section = layoutSection
+	)
+	default int overheadSideGap()
+	{
+		return 48;
+	}
+
 	@ConfigItem(
 		keyName = "hideGameCombatBars",
 		name = "Hide game combat bars",
-		description = "Hide native in-game 2D combat bars for yourself and your current opponent. This can also hide overhead 2D elements like prayers or chat for those actors.",
-		position = 7,
+		description = "Hide native in-game health-bar sprites without suppressing hitsplats, overhead prayers, skulls, or chat",
+		position = 8,
 		section = layoutSection
 	)
 	default boolean hideGameCombatBars()
