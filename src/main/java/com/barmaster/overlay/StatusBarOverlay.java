@@ -59,7 +59,7 @@ abstract class StatusBarOverlay extends Overlay
 		boolean showText = config.showText();
 		boolean showPercentage = config.showPercentage();
 
-		String label = showText ? BarRenderer.formatLabel(current, max, showPercentage) : name;
+		String label = showText ? name + " " + BarRenderer.formatLabel(current, max, showPercentage) : name;
 
 		Rectangle backgroundRect = new Rectangle(x, y, width, height);
 		graphics.setColor(background);

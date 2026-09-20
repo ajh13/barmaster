@@ -68,6 +68,13 @@ public class BarRendererTest
 	}
 
 	@Test
+	public void testFormatLabelClampsPercentage()
+	{
+		assertEquals("120 / 100 (100%)", BarRenderer.formatLabel(120, 100, true));
+		assertEquals("-5 / 100 (0%)", BarRenderer.formatLabel(-5, 100, true));
+	}
+
+	@Test
 	public void testFormatLabelWithoutPercentage()
 	{
 		assertEquals("33 / 99", BarRenderer.formatLabel(33, 99, false));

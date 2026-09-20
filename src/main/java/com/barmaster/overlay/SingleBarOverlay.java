@@ -29,7 +29,6 @@ import com.barmaster.util.BarType;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Skill;
@@ -40,7 +39,6 @@ public class SingleBarOverlay extends StatusBarOverlay
 	private final Client client;
 	private final BarType barType;
 
-	@Inject
 	SingleBarOverlay(Client client, BarMasterConfig config, BarType barType)
 	{
 		super(config);
