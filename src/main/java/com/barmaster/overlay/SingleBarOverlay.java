@@ -94,6 +94,11 @@ public class SingleBarOverlay extends StatusBarOverlay
 				return null;
 		}
 
+		if (config.hideFullPlayerBars() && max > 0 && current >= max)
+		{
+			return null;
+		}
+
 		return renderBar(graphics, 0, 0, name, current, max, color);
 	}
 

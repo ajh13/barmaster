@@ -29,6 +29,7 @@ import com.barmaster.util.BarRenderer;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -38,7 +39,6 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 abstract class StatusBarOverlay extends Overlay
 {
 	private static final int PADDING = 2;
-	private static final int BORDER_SIZE = 1;
 
 	protected final BarMasterConfig config;
 
@@ -52,12 +52,24 @@ abstract class StatusBarOverlay extends Overlay
 
 	protected Dimension renderBar(Graphics2D graphics, int x, int y, String name, int current, int max, Color fillColor)
 	{
-		int width = Math.max(1, config.barWidth());
-		int height = Math.max(1, config.barHeight());
+		return renderBar(graphics, x, y, name, current, max, fillColor, 0, 0);
+	}
+
+	protected Dimension renderBar(Graphics2D graphics, int x, int y, String name, int current, int max, Color fillColor,
+								  int widthOverride, int heightOverride)
+	{
+		int width = resolveWidth(widthOverride);
+		int height = resolveHeight(heightOverride);
+		int border = Math.max(0, config.borderThickness());
+		int inset = Math.min(border, Math.min(width, height) / 2);
 		Color background = config.backgroundColor();
 		Color text = config.textColor();
+		Color borderColor = config.borderColor();
 		boolean showText = config.showText();
 		boolean showPercentage = config.showPercentage();
+
+		Font originalFont = graphics.getFont();
+		graphics.setFont(originalFont.deriveFont((float) Math.min(config.fontSize(), Math.max(8, height - 2))));
 
 		String label = showText ? name + " " + BarRenderer.formatLabel(current, max, showPercentage) : name;
 
@@ -65,21 +77,21 @@ abstract class StatusBarOverlay extends Overlay
 		graphics.setColor(background);
 		graphics.fill(backgroundRect);
 
-		int fill = BarRenderer.fillWidth(width - 2 * BORDER_SIZE, current, max);
+		int fill = BarRenderer.fillWidth(width - 2 * inset, current, max);
 		if (fill > 0)
 		{
 			Rectangle fillRect = new Rectangle(
-				x + BORDER_SIZE,
-				y + BORDER_SIZE,
+				x + inset,
+				y + inset,
 				fill,
-				height - 2 * BORDER_SIZE
+				height - 2 * inset
 			);
 			graphics.setColor(fillColor);
 			graphics.fill(fillRect);
 		}
 
-		graphics.setColor(Color.BLACK);
-		graphics.setStroke(new BasicStroke(BORDER_SIZE));
+		graphics.setColor(borderColor);
+		graphics.setStroke(new BasicStroke(border));
 		graphics.draw(backgroundRect);
 
 		if (showText || !name.isEmpty())
@@ -91,6 +103,18 @@ abstract class StatusBarOverlay extends Overlay
 			graphics.drawString(label, textX, textY);
 		}
 
+		graphics.setFont(originalFont);
+
 		return new Dimension(width, height + PADDING);
+	}
+
+	protected int resolveWidth(int widthOverride)
+	{
+		return Math.max(1, widthOverride > 0 ? widthOverride : config.barWidth());
+	}
+
+	protected int resolveHeight(int heightOverride)
+	{
+		return Math.max(1, heightOverride > 0 ? heightOverride : config.barHeight());
 	}
 }

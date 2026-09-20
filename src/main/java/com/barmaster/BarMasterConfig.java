@@ -141,12 +141,37 @@ public interface BarMasterConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "hideFullPlayerBars",
+		name = "Hide full player bars",
+		description = "Do not show player HP, prayer or special attack bars when they are at maximum",
+		position = 14,
+		section = styleSection
+	)
+	default boolean hideFullPlayerBars()
+	{
+		return false;
+	}
+
+	@Range(min = 8, max = 32)
+	@ConfigItem(
+		keyName = "fontSize",
+		name = "Font size",
+		description = "Font size used for bar text labels",
+		position = 15,
+		section = styleSection
+	)
+	default int fontSize()
+	{
+		return 12;
+	}
+
 	@Alpha
 	@ConfigItem(
 		keyName = "textColor",
 		name = "Text color",
 		description = "Color of the text drawn on bars",
-		position = 14,
+		position = 16,
 		section = styleSection
 	)
 	default Color textColor()
@@ -156,10 +181,36 @@ public interface BarMasterConfig extends Config
 
 	@Alpha
 	@ConfigItem(
+		keyName = "borderColor",
+		name = "Border color",
+		description = "Color of the border drawn around each bar",
+		position = 17,
+		section = styleSection
+	)
+	default Color borderColor()
+	{
+		return Color.BLACK;
+	}
+
+	@Range(min = 0, max = 5)
+	@ConfigItem(
+		keyName = "borderThickness",
+		name = "Border thickness",
+		description = "Thickness of the border drawn around each bar in pixels",
+		position = 18,
+		section = styleSection
+	)
+	default int borderThickness()
+	{
+		return 1;
+	}
+
+	@Alpha
+	@ConfigItem(
 		keyName = "backgroundColor",
 		name = "Background color",
 		description = "Color of the empty portion of each bar",
-		position = 15,
+		position = 19,
 		section = styleSection
 	)
 	default Color backgroundColor()
@@ -265,5 +316,55 @@ public interface BarMasterConfig extends Config
 	default Color targetHpColor()
 	{
 		return new Color(40, 180, 60, 255);
+	}
+
+	@ConfigItem(
+		keyName = "targetDisplayStyle",
+		name = "Target display style",
+		description = "Show raw ratio/scale or estimated real HP when NPC max HP is known",
+		position = 52,
+		section = targetSection
+	)
+	default TargetDisplayStyle targetDisplayStyle()
+	{
+		return TargetDisplayStyle.ESTIMATED_HP;
+	}
+
+	@ConfigItem(
+		keyName = "targetSourceMode",
+		name = "Target source mode",
+		description = "Use the current interacting target only, or remember the last valid target",
+		position = 53,
+		section = targetSection
+	)
+	default TargetSourceMode targetSourceMode()
+	{
+		return TargetSourceMode.CURRENT_INTERACTION;
+	}
+
+	@Range(min = 0, max = 400)
+	@ConfigItem(
+		keyName = "targetBarWidth",
+		name = "Target bar width",
+		description = "Override the width of the target HP bar (0 to use the global bar width)",
+		position = 54,
+		section = targetSection
+	)
+	default int targetBarWidth()
+	{
+		return 0;
+	}
+
+	@Range(min = 0, max = 64)
+	@ConfigItem(
+		keyName = "targetBarHeight",
+		name = "Target bar height",
+		description = "Override the height of the target HP bar (0 to use the global bar height)",
+		position = 55,
+		section = targetSection
+	)
+	default int targetBarHeight()
+	{
+		return 0;
 	}
 }

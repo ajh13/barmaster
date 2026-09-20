@@ -71,18 +71,24 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 		{
 			int current = client.getBoostedSkillLevel(Skill.HITPOINTS);
 			int max = client.getRealSkillLevel(Skill.HITPOINTS);
-			Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor());
-			y += size.height;
-			total.height += size.height;
+			if (!shouldHideFullBar(current, max))
+			{
+				Dimension size = renderBar(graphics, x, y, "HP", current, max, config.hpColor());
+				y += size.height;
+				total.height += size.height;
+			}
 		}
 
 		if (config.showPlayerPrayer())
 		{
 			int current = client.getBoostedSkillLevel(Skill.PRAYER);
 			int max = client.getRealSkillLevel(Skill.PRAYER);
-			Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor());
-			y += size.height;
-			total.height += size.height;
+			if (!shouldHideFullBar(current, max))
+			{
+				Dimension size = renderBar(graphics, x, y, "Prayer", current, max, config.prayerColor());
+				y += size.height;
+				total.height += size.height;
+			}
 		}
 
 		if (config.showSpecialAttack())
@@ -90,11 +96,19 @@ public class PlayerStatusOverlay extends StatusBarOverlay
 			int specialTenths = client.getVarpValue(VarPlayerID.SA_ENERGY);
 			int current = specialTenths / 10;
 			int max = 100;
-			Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor());
-			y += size.height;
-			total.height += size.height;
+			if (!shouldHideFullBar(current, max))
+			{
+				Dimension size = renderBar(graphics, x, y, "Special", current, max, config.specialColor());
+				y += size.height;
+				total.height += size.height;
+			}
 		}
 
 		return total.height == 0 ? null : total;
+	}
+
+	private boolean shouldHideFullBar(int current, int max)
+	{
+		return config.hideFullPlayerBars() && max > 0 && current >= max;
 	}
 }

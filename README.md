@@ -5,10 +5,10 @@ BarMaster is a display-only RuneLite external plugin that adds configurable stat
 ## Features
 
 - **Player status bars**: HP, prayer, and special attack energy.
-- **Target HP bar**: Shows the health ratio of the entity you are currently interacting with.
+- **Target HP bar**: Shows the current or last interacted target. NPCs use estimated real HP when RuneLite has max HP data, otherwise BarMaster falls back to ratio/scale.
 - **Grouped or independent layout**: Group the three player bars into a single frame, or use independent overlays that can be positioned separately.
-- **Style configuration**: bar width/height, fill colors, background color, text color, and optional percentage text.
-- **Pure Java helpers**: `BarRenderer` handles bar geometry, labels, and color interpolation and is covered by unit tests.
+- **Style configuration**: bar width/height, fill colors, background color, border color/thickness, font size, and optional percentage text.
+- **Pure Java helpers**: `BarRenderer` handles bar geometry/labels and `TargetHpEstimator` handles NPC HP estimation; both are covered by unit tests.
 
 ## Configuration
 
@@ -20,11 +20,16 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 | Style | Bar width / height | Size of each bar in pixels |
 | Style | Show text labels | Toggle current/max value text |
 | Style | Show percentage | Append a percentage to labels |
-| Style | Text / background color | Global text and empty-bar colors |
+| Style | Hide full player bars | Hide HP/prayer/special when full |
+| Style | Font size / border thickness | Tune WoW-style bar text and border appearance |
+| Style | Text / background / border color | Global text, empty-bar, and border colors |
 | Player Hitpoints | Show player HP bar / HP color | Toggle and color |
 | Player Prayer | Show player prayer bar / Prayer color | Toggle and color |
 | Special Attack | Show special attack bar / Special color | Toggle and color |
 | Target Hitpoints | Show target HP bar / Target HP color | Toggle and color |
+| Target Hitpoints | Target display style | Ratio/scale or estimated real NPC HP when available |
+| Target Hitpoints | Target source mode | Current interaction only or remember last interaction |
+| Target Hitpoints | Target bar width / height | Optional target-only size override |
 
 ## Building
 

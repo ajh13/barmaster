@@ -25,24 +25,55 @@
 package com.barmaster.overlay;
 
 import com.barmaster.BarMasterConfig;
+import com.barmaster.TargetDisplayStyle;
+import com.barmaster.TargetSourceMode;
+import com.barmaster.util.TargetHpEstimator;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.NPC;
+import net.runelite.api.events.GameTick;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.NPCManager;
+import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.util.Text;
 
 public class TargetStatusOverlay extends StatusBarOverlay
 {
 	private final Client client;
+	private final NPCManager npcManager;
+
+	private static final int LAST_TARGET_TIMEOUT_TICKS = 8;
+
+	private Actor lastTarget;
+	private int ticksSinceLastTarget;
 
 	@Inject
-	TargetStatusOverlay(Client client, BarMasterConfig config)
+	TargetStatusOverlay(Client client, BarMasterConfig config, NPCManager npcManager)
 	{
 		super(config);
 		this.client = client;
-		setPosition(net.runelite.client.ui.overlay.OverlayPosition.BOTTOM_RIGHT);
+		this.npcManager = npcManager;
+		setPosition(OverlayPosition.BOTTOM_RIGHT);
 		setPriority(net.runelite.client.ui.overlay.OverlayPriority.LOW);
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		Actor target = resolveCurrentTarget();
+		if (target != null)
+		{
+			lastTarget = target;
+			ticksSinceLastTarget = 0;
+		}
+		else if (lastTarget != null && ++ticksSinceLastTarget > LAST_TARGET_TIMEOUT_TICKS)
+		{
+			lastTarget = null;
+		}
 	}
 
 	@Override
@@ -55,23 +86,75 @@ public class TargetStatusOverlay extends StatusBarOverlay
 
 		if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null)
 		{
+			lastTarget = null;
+			ticksSinceLastTarget = 0;
 			return null;
 		}
 
-		Actor target = client.getLocalPlayer().getInteracting();
+		Actor target = resolveTargetForRender();
 		if (target == null)
 		{
 			return null;
 		}
 
-		int current = target.getHealthRatio();
-		int max = target.getHealthScale();
-		if (max <= 0 || current < 0)
+		int healthRatio = target.getHealthRatio();
+		int healthScale = target.getHealthScale();
+		if (healthScale <= 0 || healthRatio < 0)
 		{
 			return null;
 		}
 
-		String name = target.getName() == null ? "Target" : target.getName();
-		return renderBar(graphics, 0, 0, name, current, max, config.targetHpColor());
+		int maxHp = 0;
+		if (target instanceof NPC)
+		{
+			NPC npc = (NPC) target;
+			if (npc.getTransformedComposition() != null)
+			{
+				Integer health = npcManager.getHealth(npc.getId());
+				maxHp = health == null ? 0 : health;
+			}
+		}
+
+		TargetHpEstimator.Estimate estimate = TargetHpEstimator.estimate(healthRatio, healthScale, maxHp);
+		boolean showEstimated = config.targetDisplayStyle() == TargetDisplayStyle.ESTIMATED_HP;
+		int current = showEstimated && estimate.isRealHp() ? estimate.getCurrent() : healthRatio;
+		int max = showEstimated && estimate.isRealHp() ? estimate.getMax() : healthScale;
+
+		String name = target.getName() == null ? "Target" : Text.removeTags(target.getName());
+		return renderBar(graphics, 0, 0, name, current, max, config.targetHpColor(),
+			config.targetBarWidth(), config.targetBarHeight());
+	}
+
+	private Actor resolveTargetForRender()
+	{
+		Actor current = resolveCurrentTarget();
+		if (config.targetSourceMode() == TargetSourceMode.CURRENT_INTERACTION)
+		{
+			return current;
+		}
+
+		if (current != null)
+		{
+			return current;
+		}
+
+		return lastTarget;
+	}
+
+	private Actor resolveCurrentTarget()
+	{
+		Actor localPlayer = client.getLocalPlayer();
+		if (localPlayer == null)
+		{
+			return null;
+		}
+
+		Actor interacting = localPlayer.getInteracting();
+		if (interacting == null || interacting == localPlayer)
+		{
+			return null;
+		}
+
+		return interacting;
 	}
 }
