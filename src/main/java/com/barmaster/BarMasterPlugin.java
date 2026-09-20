@@ -5,20 +5,13 @@
 package com.barmaster;
 
 import com.google.inject.Provides;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.Map;
 import javax.inject.Inject;
-import net.runelite.api.Actor;
-import net.runelite.api.Client;
-import net.runelite.api.Hitsplat;
-import net.runelite.api.NPC;
-import net.runelite.api.Player;
-import net.runelite.api.Renderable;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.HitsplatApplied;
-import net.runelite.client.callback.Hooks;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.GameState;
+import net.runelite.api.SpritePixels;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -49,7 +42,7 @@ public class BarMasterPlugin extends Plugin
 	private Client client;
 
 	@Inject
-	private Hooks hooks;
+	private ClientThread clientThread;
 
 	@Inject
 	private BarMasterConfig config;
@@ -81,15 +74,12 @@ public class BarMasterPlugin extends Plugin
 	@Inject
 	private EventBus eventBus;
 
-	private final Hooks.RenderableDrawListener drawListener = this::shouldDrawNativeRenderable;
-	private final Map<Actor, Integer> activeHitsplats = new IdentityHashMap<>();
-
 	@Override
 	protected void startUp() throws Exception
 	{
 		log.debug("BarMaster started!");
 		migrateLegacyConfig();
-		hooks.registerRenderableDrawListener(drawListener);
+		clientThread.invokeLater(this::syncNativeHealthBarOverrides);
 		eventBus.register(targetStatusOverlay);
 		eventBus.register(overheadStatusOverlay);
 		addOverlays();
@@ -99,10 +89,9 @@ public class BarMasterPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		removeOverlays();
-		activeHitsplats.clear();
+		clientThread.invoke(() -> removeSpriteOverride(NativeHealthBarSprites.HEALTH_ONLY));
 		eventBus.unregister(targetStatusOverlay);
 		eventBus.unregister(overheadStatusOverlay);
-		hooks.unregisterRenderableDrawListener(drawListener);
 		log.debug("BarMaster stopped!");
 	}
 
@@ -115,32 +104,20 @@ public class BarMasterPlugin extends Plugin
 		}
 
 		log.debug("BarMaster config changed: {}", event.getKey());
+		if ("hideGameCombatBars".equals(event.getKey()))
+		{
+			clientThread.invokeLater(this::syncNativeHealthBarOverrides);
+		}
 		removeOverlays();
 		addOverlays();
 	}
 
 	@Subscribe
-	public void onHitsplatApplied(HitsplatApplied event)
+	public void onGameStateChanged(GameStateChanged event)
 	{
-		Actor actor = event.getActor();
-		Hitsplat hitsplat = event.getHitsplat();
-		if (actor != null && hitsplat != null)
+		if (event.getGameState() == GameState.LOGGED_IN)
 		{
-			activeHitsplats.put(actor, hitsplat.getDisappearsOnGameCycle());
-		}
-	}
-
-	@Subscribe
-	public void onGameTick(GameTick event)
-	{
-		int gameCycle = client.getGameCycle();
-		Iterator<Map.Entry<Actor, Integer>> iterator = activeHitsplats.entrySet().iterator();
-		while (iterator.hasNext())
-		{
-			if (iterator.next().getValue() <= gameCycle)
-			{
-				iterator.remove();
-			}
+			clientThread.invokeLater(this::syncNativeHealthBarOverrides);
 		}
 	}
 
@@ -180,104 +157,32 @@ public class BarMasterPlugin extends Plugin
 		overlayManager.remove(playerRunEnergyBarOverlay);
 	}
 
-	private boolean shouldDrawNativeRenderable(Renderable renderable, boolean drawingUI)
+	private void syncNativeHealthBarOverrides()
 	{
-		if (!drawingUI || !config.hideGameCombatBars())
+		removeSpriteOverride(NativeHealthBarSprites.HEALTH_ONLY);
+		if (config.hideGameCombatBars())
 		{
-			return true;
+			applySpriteOverride(NativeHealthBarSprites.HEALTH_ONLY);
 		}
-
-		Player localPlayer = client.getLocalPlayer();
-		if (localPlayer == null)
-		{
-			return true;
-		}
-
-		if (renderable == localPlayer)
-		{
-			return hasNativeOverheadUi(localPlayer);
-		}
-
-		if (!(renderable instanceof Actor))
-		{
-			return true;
-		}
-
-		Actor actor = (Actor) renderable;
-		if (hasVisibleHealth(actor) && shouldHideNativeHealthBarFor(actor, localPlayer))
-		{
-			return false;
-		}
-		if (hasNativeOverheadUi(actor))
-		{
-			return true;
-		}
-
-		Actor localInteracting = localPlayer.getInteracting();
-		return actor != localInteracting && actor.getInteracting() != localPlayer;
 	}
 
-	private boolean shouldHideNativeHealthBarFor(Actor actor, Player localPlayer)
+	private void applySpriteOverride(int[] spriteIds)
 	{
-		if (hasNativeOverheadUi(actor))
+		SpritePixels transparent = client.createSpritePixels(new int[]{0}, 1, 1);
+		for (int spriteId : spriteIds)
 		{
-			return false;
+			client.getSpriteOverrides().put(spriteId, transparent);
 		}
-
-		if (actor instanceof NPC)
-		{
-			return config.showNearbyNpcHealthBars() || actor == localPlayer.getInteracting() || actor.getInteracting() == localPlayer;
-		}
-
-		return actor instanceof Player && config.showNearbyPlayerHealthBars();
+		client.resetHealthBarCaches();
 	}
 
-	private boolean hasVisibleHealth(Actor actor)
+	private void removeSpriteOverride(int[] spriteIds)
 	{
-		return actor.getHealthScale() > 0 && actor.getHealthRatio() >= 0;
-	}
-
-	private boolean hasNativeOverheadUi(Actor actor)
-	{
-		if (hasActiveHitsplat(actor))
+		for (int spriteId : spriteIds)
 		{
-			return true;
+			client.getSpriteOverrides().remove(spriteId);
 		}
-
-		if (actor.getOverheadText() != null)
-		{
-			return true;
-		}
-
-		if (actor instanceof Player)
-		{
-			Player player = (Player) actor;
-			return player.getOverheadIcon() != null || player.getSkullIcon() != -1;
-		}
-
-		if (actor instanceof NPC)
-		{
-			NPC npc = (NPC) actor;
-			return hasAnyOverheadSprite(npc.getOverheadArchiveIds()) || hasAnyOverheadSprite(npc.getOverheadSpriteIds());
-		}
-
-		return false;
-	}
-
-	private boolean hasAnyOverheadSprite(int[] overheadSprites)
-	{
-		return overheadSprites != null && overheadSprites.length > 0;
-	}
-
-	private boolean hasAnyOverheadSprite(short[] overheadSprites)
-	{
-		return overheadSprites != null && overheadSprites.length > 0;
-	}
-
-	private boolean hasActiveHitsplat(Actor actor)
-	{
-		Integer expiresOnCycle = activeHitsplats.get(actor);
-		return expiresOnCycle != null && expiresOnCycle > client.getGameCycle();
+		client.resetHealthBarCaches();
 	}
 
 	@Provides
