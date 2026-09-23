@@ -21,7 +21,7 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 
 abstract class StatusBarOverlay extends Overlay
 {
-	private static final int PADDING = 2;
+	protected static final int PADDING = 2;
 
 	protected final BarMasterConfig config;
 

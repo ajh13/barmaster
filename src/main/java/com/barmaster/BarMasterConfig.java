@@ -368,6 +368,68 @@ public interface BarMasterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "modernPrayerOverheads",
+		name = "Modern prayer overheads",
+		description = "Show an additional square prayer badge beside overhead bars; native prayer icons remain visible",
+		position = 32,
+		section = prayerSection
+	)
+	default boolean modernPrayerOverheads()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "prayerBadgePlacement",
+		name = "Prayer badge placement",
+		description = "Position the optional badge beside or above/below the overhead bar stack",
+		position = 33,
+		section = prayerSection
+	)
+	default PrayerBadgePlacement prayerBadgePlacement()
+	{
+		return PrayerBadgePlacement.LEFT;
+	}
+
+	@Range(min = 20, max = 48)
+	@ConfigItem(
+		keyName = "prayerBadgeSize",
+		name = "Prayer badge size",
+		description = "Side length in pixels before overhead zoom scaling",
+		position = 34,
+		section = prayerSection
+	)
+	default int prayerBadgeSize()
+	{
+		return 28;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "prayerBadgeBackground",
+		name = "Prayer badge background",
+		description = "Background color and opacity for the square prayer badge",
+		position = 35,
+		section = prayerSection
+	)
+	default Color prayerBadgeBackground()
+	{
+		return new Color(28, 36, 46, 220);
+	}
+
+	@ConfigItem(
+		keyName = "prayerBadgeBorder",
+		name = "Prayer badge border",
+		description = "Draw a fine border around the optional square badge",
+		position = 36,
+		section = prayerSection
+	)
+	default boolean prayerBadgeBorder()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "showSpecialAttack",
 		name = "Show special attack bar",
 		description = "Display the player's special attack energy bar",

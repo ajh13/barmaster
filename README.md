@@ -8,6 +8,7 @@ BarMaster is a display-only RuneLite external plugin that adds configurable stat
 - **Target HP bar**: Shows the current or last interacted target. NPCs use estimated real HP when RuneLite has max HP data, otherwise BarMaster falls back to ratio/scale.
 - **Nearby HP bars**: Optionally show overhead health-only bars for nearby NPCs and players with visible health.
 - **Fixed, overhead, or both**: Show bars as movable RuneLite overlays, above character heads, or both at once. Overhead bars sit left of native overhead UI by default, can keep a constant pixel size while zooming or scale with the character, and can be offset horizontally/vertically.
+- **Optional modern prayer badge**: A compact rounded-square, color-configurable badge identifies the local player's active overhead prayer beside the BarMaster bar stack. It is off by default and does not replace or suppress the native prayer icon.
 - **Optional native bar hiding**: Hide the game's built-in health-bar sprites while preserving native overhead UI like hitsplats, prayers, skulls, and chat.
 - **Grouped or independent layout**: Stack player bars into one movable overlay, or use independent overlays that can be positioned separately.
 - **Sleeker rendering**: Rounded borderless bars by default, horizontal or vertical orientation, stacked upright text on vertical bars, antialiased drawing, darker empty-bar background, and labels that auto-hide instead of becoming unreadable on skinny bars.
@@ -39,6 +40,9 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 | Style | Border thickness | Defaults to 0 for cleaner bars |
 | Player Hitpoints | Show player HP bar / HP color | Toggle and color |
 | Player Prayer | Show player prayer bar / Prayer color | Toggle and color |
+| Player Prayer | Modern prayer overheads | Opt-in additional square badge showing the local player's active overhead prayer while overhead bars are enabled |
+| Player Prayer | Prayer badge placement / size | Position left, right, above, or below the bar stack and adjust its size |
+| Player Prayer | Prayer badge background / border | Set the badge color and opacity; optional border (off by default) |
 | Special Attack | Show special attack bar / Special color | Toggle and color |
 | Run Energy | Show run energy bar / Run energy color | Toggle and color |
 | Target Hitpoints | Show target HP bar / Target HP color | Toggle and color |
@@ -66,6 +70,8 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 ```
 
 Then follow the [Using Jagex Accounts](https://github.com/runelite/runelite/wiki/Using-Jagex-Accounts) guide to log in to the development client.
+
+The prayer badge is **additive**: RuneLite's native overhead prayer icon stays visible because suppressing it independently without interfering with hitsplats, chat, or other overheads is not established here. Badge labels identify melee (M), ranged (R), magic (W), smite (S), and supported combination/other prayers. The default left position keeps the badge away from the native icon; right/above/below positions may need in-game tuning at different zoom levels. It is display-only and never switches or recommends prayers.
 
 ## Plugin Hub safety
 

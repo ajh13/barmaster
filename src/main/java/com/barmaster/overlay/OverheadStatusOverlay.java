@@ -15,10 +15,12 @@ import java.util.Collections;
 import java.util.List;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import javax.inject.Inject;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.HeadIcon;
 import net.runelite.api.NPC;
 import net.runelite.api.Player;
 import net.runelite.api.Point;
@@ -137,7 +139,8 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		{
 			barCount++;
 		}
-		if (barCount == 0)
+		boolean showBadge = ModernPrayerBadge.shouldRender(config.modernPrayerOverheads(), true, player.getOverheadIcon());
+		if (barCount == 0 && !showBadge)
 		{
 			return;
 		}
@@ -158,18 +161,26 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		int visibleBars = visiblePlayerBarCount();
-		if (visibleBars == 0)
+		if (visibleBars == 0 && !showBadge)
 		{
 			return;
 		}
 
-		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * gap;
-		int x = vertical
-			? anchor.getX() + config.overheadPlayerOffsetX() - sideGap - stackWidth
-			: anchor.getX() + config.overheadPlayerOffsetX() - sideGap - width;
-		int y = vertical
-			? anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - height
-			: anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - visibleBars * (height + gap);
+		int effectiveBars = Math.max(1, visibleBars);
+		int stackWidth = visibleBars == 0 ? 0 : vertical ? effectiveBars * width + (effectiveBars - 1) * gap : width;
+		int x = visibleBars == 0
+			? anchor.getX() + config.overheadPlayerOffsetX() - sideGap
+			: anchor.getX() + config.overheadPlayerOffsetX() - sideGap - stackWidth;
+		int y = visibleBars == 0
+			? anchor.getY() + config.overheadPlayerOffsetY() - overheadGap
+			: vertical
+				? anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - height
+				: anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - effectiveBars * (height + gap);
+		if (showBadge)
+		{
+			renderPrayerBadge(graphics, config, player.getOverheadIcon(),
+				new Rectangle(x, y, stackWidth, PrayerBadgeLayout.stackHeight(visibleBars, height, vertical)), scale);
+		}
 
 		if (config.showPlayerHp())
 		{
@@ -239,6 +250,19 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 				}
 			}
 		}
+	}
+
+	static void renderPrayerBadge(Graphics2D graphics, BarMasterConfig config, HeadIcon icon, Rectangle stack, double scale)
+	{
+		if (!ModernPrayerBadge.shouldRender(config.modernPrayerOverheads(), config.placementMode().isOverheadEnabled(), icon))
+		{
+			return;
+		}
+		int size = Math.max(12, (int) Math.round(config.prayerBadgeSize() * scale));
+		int badgeGap = Math.max(2, (int) Math.round(OVERHEAD_BAR_GAP * scale));
+		java.awt.Point position = PrayerBadgeLayout.position(stack, size, badgeGap, config.prayerBadgePlacement());
+		ModernPrayerBadge.draw(graphics, icon, position.x, position.y, size,
+			config.prayerBadgeBackground(), config.textColor(), config.prayerBadgeBorder());
 	}
 
 	private int visiblePlayerBarCount()
