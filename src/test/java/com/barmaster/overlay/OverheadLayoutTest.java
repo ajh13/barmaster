@@ -17,6 +17,15 @@ public class OverheadLayoutTest
 	}
 
 	@Test
+	public void stackHeightIncludesRenderedInterBarSpacing()
+	{
+		assertEquals(86, OverheadLayout.stackHeight(4, 20, false));
+		assertEquals(20, OverheadLayout.stackHeight(1, 20, false));
+		assertEquals(20, OverheadLayout.stackHeight(4, 20, true));
+		assertEquals(0, OverheadLayout.stackHeight(0, 20, false));
+	}
+
+	@Test
 	public void placesWholeHorizontalStackOutsideNativeUi()
 	{
 		for (OverheadPlacement side : OverheadPlacement.values())

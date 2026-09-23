@@ -164,7 +164,7 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 		}
 
 		int stackWidth = vertical ? visibleBars * width + Math.max(0, visibleBars - 1) * gap : width;
-		int stackHeight = vertical ? height : visibleBars * height;
+		int stackHeight = OverheadLayout.stackHeight(visibleBars, height, vertical);
 		java.awt.Point position = OverheadLayout.position(anchor.getX(), anchor.getY(), stackWidth, stackHeight,
 			scaleOverheadDimension(config.nativeOverheadHalfWidth(), scale),
 			scaleOverheadDimension(config.nativeOverheadTop(), scale),

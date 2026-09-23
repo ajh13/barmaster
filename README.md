@@ -69,7 +69,7 @@ All options are available in the RuneLite configuration panel under **BarMaster*
 
 Then follow the [Using Jagex Accounts](https://github.com/runelite/runelite/wiki/Using-Jagex-Accounts) guide to log in to the development client.
 
-Overhead prayer, hitsplat, and chat bounds are estimated from the actor anchor, not read from native RuneLite sprite rectangles. In the game, test prayer/hitsplats with horizontal and vertical bars on the player and target/nearby actors at low, middle, and high zoom; tune the exclusion dimensions and offsets if anything overlaps. Native health-bar hiding is unchanged. A passing Java build cannot establish visual clearance.
+Overhead prayer, hitsplat, and chat bounds are estimated from the actor anchor, not read from native RuneLite sprite rectangles. In the game, test prayer/hitsplats with horizontal and vertical bars on the player and target/nearby actors at low, middle, and high zoom; tune the exclusion dimensions and offsets if anything overlaps. Below places bars beneath the reserved region and may cover the actor; bars near a screen edge can clip. Native health-bar hiding is unchanged. A passing Java build cannot establish visual clearance.
 
 ## Plugin Hub safety
 

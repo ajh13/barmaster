@@ -10,6 +10,15 @@ final class OverheadLayout
 	{
 	}
 
+	static int stackHeight(int visibleBars, int barHeight, boolean vertical)
+	{
+		if (visibleBars <= 0)
+		{
+			return 0;
+		}
+		return vertical ? barHeight : visibleBars * barHeight + (visibleBars - 1) * StatusBarOverlay.PADDING;
+	}
+
 	static Point position(int anchorX, int anchorY, int stackWidth, int stackHeight,
 		int nativeHalfWidth, int nativeTop, int nativeBottom, int sideGap, int verticalGap,
 		int offsetX, int offsetY, OverheadPlacement placement)
