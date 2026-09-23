@@ -144,7 +144,7 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "overheadGap",
 		name = "Overhead gap",
-		description = "Gap between the top of the character and the overhead bar stack; scales with the character in scale mode",
+		description = "Gap between BarMaster bars and the estimated native overhead region; scales with character in scale mode",
 		position = 6,
 		section = layoutSection
 	)
@@ -157,13 +157,76 @@ public interface BarMasterConfig extends Config
 	@ConfigItem(
 		keyName = "overheadSideGap",
 		name = "Native overhead clearance",
-		description = "Horizontal clearance from the actor's native overhead UI anchor; BarMaster bars sit to the left so native overheads appear to the right",
+		description = "Horizontal gap beyond the estimated native overhead region for left/right placement",
 		position = 7,
 		section = layoutSection
 	)
 	default int overheadSideGap()
 	{
 		return 48;
+	}
+
+	@ConfigItem(
+		keyName = "playerOverheadPlacement",
+		name = "Player overhead side",
+		description = "Place the whole player bar stack outside an estimated native prayer, hitsplat and chat region",
+		position = 20,
+		section = layoutSection
+	)
+	default OverheadPlacement playerOverheadPlacement()
+	{
+		return OverheadPlacement.LEFT;
+	}
+
+	@ConfigItem(
+		keyName = "npcOverheadPlacement",
+		name = "NPC / nearby overhead side",
+		description = "Place target and nearby health bars outside the estimated native overhead region",
+		position = 21,
+		section = layoutSection
+	)
+	default OverheadPlacement npcOverheadPlacement()
+	{
+		return OverheadPlacement.LEFT;
+	}
+
+	@Range(min = 0, max = 150)
+	@ConfigItem(
+		keyName = "nativeOverheadHalfWidth",
+		name = "Native overhead half-width",
+		description = "Estimated left/right clearance around the actor overhead anchor; tune if native UI overlaps bars",
+		position = 22,
+		section = layoutSection
+	)
+	default int nativeOverheadHalfWidth()
+	{
+		return 32;
+	}
+
+	@Range(min = 0, max = 200)
+	@ConfigItem(
+		keyName = "nativeOverheadTop",
+		name = "Native overhead above head",
+		description = "Estimated clearance above the actor head for prayer icons and chat; tune in game",
+		position = 23,
+		section = layoutSection
+	)
+	default int nativeOverheadTop()
+	{
+		return 56;
+	}
+
+	@Range(min = 0, max = 150)
+	@ConfigItem(
+		keyName = "nativeOverheadBottom",
+		name = "Native overhead below head",
+		description = "Estimated clearance below the overhead anchor for hitsplats; tune in game",
+		position = 24,
+		section = layoutSection
+	)
+	default int nativeOverheadBottom()
+	{
+		return 32;
 	}
 
 	@ConfigItem(

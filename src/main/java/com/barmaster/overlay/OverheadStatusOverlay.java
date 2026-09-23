@@ -163,13 +163,16 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		int stackWidth = visibleBars * width + Math.max(0, visibleBars - 1) * gap;
-		int x = vertical
-			? anchor.getX() + config.overheadPlayerOffsetX() - sideGap - stackWidth
-			: anchor.getX() + config.overheadPlayerOffsetX() - sideGap - width;
-		int y = vertical
-			? anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - height
-			: anchor.getY() + config.overheadPlayerOffsetY() - overheadGap - visibleBars * (height + gap);
+		int stackWidth = vertical ? visibleBars * width + Math.max(0, visibleBars - 1) * gap : width;
+		int stackHeight = vertical ? height : visibleBars * height;
+		java.awt.Point position = OverheadLayout.position(anchor.getX(), anchor.getY(), stackWidth, stackHeight,
+			scaleOverheadDimension(config.nativeOverheadHalfWidth(), scale),
+			scaleOverheadDimension(config.nativeOverheadTop(), scale),
+			scaleOverheadDimension(config.nativeOverheadBottom(), scale),
+			sideGap, overheadGap, config.overheadPlayerOffsetX(), config.overheadPlayerOffsetY(),
+			config.playerOverheadPlacement());
+		int x = position.x;
+		int y = position.y;
 
 		if (config.showPlayerHp())
 		{
@@ -391,7 +394,12 @@ public class OverheadStatusOverlay extends StatusBarOverlay
 			return;
 		}
 
-		renderBar(graphics, anchor.getX() - width - overheadSideGap(scale), anchor.getY() - height - overheadGap(scale), name, current, max,
+		java.awt.Point position = OverheadLayout.position(anchor.getX(), anchor.getY(), width, height,
+			scaleOverheadDimension(config.nativeOverheadHalfWidth(), scale),
+			scaleOverheadDimension(config.nativeOverheadTop(), scale),
+			scaleOverheadDimension(config.nativeOverheadBottom(), scale),
+			overheadSideGap(scale), overheadGap(scale), 0, 0, config.npcOverheadPlacement());
+		renderBar(graphics, position.x, position.y, name, current, max,
 			color, barWidth, barHeight);
 	}
 
